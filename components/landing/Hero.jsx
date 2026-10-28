@@ -10,8 +10,8 @@ export default function Hero() {
             Tu mesa ya está lista.
           </h1>
           <p className="mt-6 max-w-md text-lg text-tinta/80">
-            Elegí el día, la cantidad de personas y un horario. Solo te mostramos los turnos que tienen mesa libre, así
-            no hay que esperar una respuesta para saber si hay lugar.
+            Elegí el día, la cantidad de personas y un horario. Solo te mostramos los turnos que tienen mesa libre, y
+            si querés, elegís en el plano de qué mesa te sentás.
           </p>
           <p className="mt-8 text-sm text-tinta/70">
             {RESTAURANTE.direccion}, {RESTAURANTE.ciudad}

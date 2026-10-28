@@ -1,40 +1,56 @@
 import { createClient } from '@/lib/supabase/server';
-import { hoyAR, minutosAhoraAR, horaAMinutos, formatHora } from '@/lib/utils';
+import { hoyAR, sumarDias, minutosAhoraAR, horaAMinutos, formatHora } from '@/lib/utils';
 import MesasGrid from './MesasGrid';
 
 export default async function MesasPage() {
   const supabase = createClient();
+  const hoy = hoyAR();
 
-  const [{ data: mesas }, { data: reservasHoy }] = await Promise.all([
-    supabase.from('mesas').select('id,numero_mesa,capacidad,estado').order('numero_mesa'),
+  const [{ data: mesas, error: errorMesas }, { data: reservas }] = await Promise.all([
+    supabase
+      .from('mesas')
+      .select('id,numero_mesa,capacidad,estado,posicion')
+      .order('posicion', { ascending: true, nullsFirst: false })
+      .order('numero_mesa'),
+    // Reservas activas con mesa asignada: hoy y los próximos 30 días
     supabase
       .from('reservas')
-      .select('mesa_id,hora_reserva')
-      .eq('fecha_reserva', hoyAR())
+      .select('id,mesa_id,nombre_cliente,telefono_cliente,fecha_reserva,hora_reserva,cantidad_personas,estado')
+      .gte('fecha_reserva', hoy)
+      .lte('fecha_reserva', sumarDias(hoy, 30))
       .in('estado', ['pendiente', 'confirmada'])
       .not('mesa_id', 'is', null)
+      .order('fecha_reserva')
       .order('hora_reserva'),
   ]);
 
-  // Una mesa libre se muestra como "Reservada" si tiene una reserva activa hoy que no terminó (2 h de duración)
+  if (errorMesas) {
+    return (
+      <div className="rounded-md bg-tomate/10 p-4 text-sm text-tomate" role="alert">
+        No se pudieron cargar las mesas: {errorMesas.message}. Si el mensaje menciona la columna "posicion", ejecutá
+        supabase/v6_posicion_mesas.sql en el SQL Editor de Supabase.
+      </div>
+    );
+  }
+
   const ahora = minutosAhoraAR();
-  const proximaReserva = new Map();
-  (reservasHoy ?? []).forEach((r) => {
-    if (horaAMinutos(r.hora_reserva) + 120 > ahora && !proximaReserva.has(r.mesa_id)) {
-      proximaReserva.set(r.mesa_id, formatHora(r.hora_reserva));
-    }
+
+  const lista = (mesas ?? []).map((m) => {
+    const deEstaMesa = (reservas ?? []).filter((r) => r.mesa_id === m.id);
+    const deHoy = deEstaMesa.filter((r) => r.fecha_reserva === hoy);
+    const proximas = deEstaMesa.filter((r) => r.fecha_reserva > hoy);
+
+    // "Reservada": tiene una reserva hoy que todavía no terminó (cada reserva dura 2 h)
+    const vigente = deHoy.find((r) => horaAMinutos(r.hora_reserva) + 120 > ahora);
+
+    return {
+      ...m,
+      vista: m.estado === 'inactiva' ? 'inactiva' : m.estado === 'ocupada' ? 'ocupada' : vigente ? 'reservada' : 'libre',
+      horaReserva: vigente ? formatHora(vigente.hora_reserva) : null,
+      hoy: deHoy,
+      proximas,
+    };
   });
 
-  const lista = (mesas ?? []).map((m) => ({
-    ...m,
-    vista: m.estado === 'inactiva' ? 'inactiva' : m.estado === 'ocupada' ? 'ocupada' : proximaReserva.has(m.id) ? 'reservada' : 'libre',
-    horaReserva: proximaReserva.get(m.id) ?? null,
-  }));
-
-  return (
-    <div className="space-y-6">
-      <h1 className="font-display text-4xl">Mesas</h1>
-      <MesasGrid mesas={lista} />
-    </div>
-  );
+  return <MesasGrid mesas={lista} />;
 }

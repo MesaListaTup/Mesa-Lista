@@ -93,3 +93,13 @@ middleware.js             Refresca la sesión y redirige si no hay login en /adm
 ## 9. Nota sobre el backend
 
 Esta versión **no necesita un servidor Express aparte**: Next.js se comunica directo con Supabase mediante su SDK, y la lógica sensible vive en funciones SQL protegidas por RLS. Si más adelante necesitan un backend propio, pueden agregarlo con Route Handlers (`app/api/...`).
+
+
+## Plano de mesas (V3)
+
+En la landing, al elegir un horario aparece el plano del salón para elegir mesa (opcional).
+
+- Migración: ejecutar `supabase/v3_plano_mesas.sql` en el SQL Editor (después de `mesa_lista.sql`).
+- `mesas_disponibilidad(fecha, hora, personas)` devuelve qué mesas están libres sin exponer la tabla `reservas`.
+- `crear_reserva` ahora acepta `p_mesa_id` y valida en el servidor que la mesa exista, esté activa, alcance para el grupo y no esté tomada.
+- `components/landing/PlanoMesas.jsx` dibuja las mesas que existan en la tabla `mesas`: se acomodan solas en una grilla y la forma depende de la capacidad (redonda hasta 2, rectangular desde 3). Si agregan o desactivan mesas desde el panel, el plano se actualiza solo.
