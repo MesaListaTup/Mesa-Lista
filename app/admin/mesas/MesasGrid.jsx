@@ -16,6 +16,31 @@ function horaFin(hora) {
   return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
 }
 
+// Arma el link de WhatsApp a partir del teléfono cargado por el cliente (formato libre, ej. "11 5555 0123").
+// Normaliza a formato internacional argentino para celulares: 54 9 + código de área + número (sin 0 ni 15).
+function linkWhatsApp(telefono) {
+  let d = String(telefono ?? '').replace(/\D/g, '');
+  if (d.startsWith('00')) d = d.slice(2);
+  if (!d) return null;
+  if (d.startsWith('54')) {
+    d = d.slice(2);
+    if (d.startsWith('9')) d = d.slice(1);
+  }
+  d = d.replace(/^0+/, '');
+  // Quita el "15" de celular que va después del código de área (código de 2 a 4 dígitos + 15 + abonado = 12 dígitos)
+  if (d.length === 12) {
+    for (const a of [2, 3, 4]) {
+      if (d.slice(a, a + 2) === '15') {
+        d = d.slice(0, a) + d.slice(a + 2);
+        break;
+      }
+    }
+  }
+  if (d.length === 10) d = `549${d}`;
+  else if (d.length < 10) return null;
+  return `https://wa.me/${d}`;
+}
+
 export default function MesasGrid({ mesas }) {
   const supabase = createClient();
   const router = useRouter();
@@ -243,7 +268,15 @@ export default function MesasGrid({ mesas }) {
                           <p className="mt-0.5 text-xs text-tinta/80">
                             <span className="font-medium">{r.nombre_cliente}</span> · {r.cantidad_personas}{' '}
                             {r.cantidad_personas === 1 ? 'persona' : 'personas'} ·{' '}
-                            <a href={`tel:${r.telefono_cliente}`} className="hover:underline">{r.telefono_cliente}</a>
+                            <a
+                              href={linkWhatsApp(r.telefono_cliente) ?? `tel:${r.telefono_cliente}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="Contactar por WhatsApp"
+                              className="hover:underline"
+                            >
+                              {r.telefono_cliente}
+                            </a>
                           </p>
                         </li>
                       ))}
