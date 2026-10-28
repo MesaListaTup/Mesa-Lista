@@ -81,6 +81,25 @@ middleware.js             Refresca la sesión y redirige si no hay login en /adm
 - Los datos del panel se actualizan al recargar o al operar; no usa Realtime todavía.
 - Pendiente de V2/V3: delivery, pantalla de cocina (KDS) y pagos.
 
-## 8. Nota sobre el backend
+## 8. Avance de la V2
+
+- Landing responsive con menú hamburguesa y secciones «Nuestra historia», «Dónde encontrarnos» (mapa de Google) y «Contacto».
+- Panel de admin con menú hamburguesa en celular y pantalla **Mensajes** para leer lo que llega del formulario de contacto.
+- **Importante:** ejecutar `supabase/v2_contacto.sql` en el SQL Editor para crear la tabla y la función del formulario.
+- Textos de la historia y dirección del mapa: se editan en `lib/config.js`.
+- Pendiente: elegir mesa al reservar, menú en cocina, plan VIP, «Mis reservas».
+- `docs/PROMPT_DOCUMENTACION.md`: prompt para completar los informes por versión.
+
+## 9. Nota sobre el backend
 
 Esta versión **no necesita un servidor Express aparte**: Next.js se comunica directo con Supabase mediante su SDK, y la lógica sensible vive en funciones SQL protegidas por RLS. Si más adelante necesitan un backend propio, pueden agregarlo con Route Handlers (`app/api/...`).
+
+
+## Plano de mesas (V3)
+
+En la landing, al elegir un horario aparece el plano del salón para elegir mesa (opcional).
+
+- Migración: ejecutar `supabase/v3_plano_mesas.sql` en el SQL Editor (después de `mesa_lista.sql`).
+- `mesas_disponibilidad(fecha, hora, personas)` devuelve qué mesas están libres sin exponer la tabla `reservas`.
+- `crear_reserva` ahora acepta `p_mesa_id` y valida en el servidor que la mesa exista, esté activa, alcance para el grupo y no esté tomada.
+- `components/landing/PlanoMesas.jsx` dibuja las mesas que existan en la tabla `mesas`: se acomodan solas en una grilla y la forma depende de la capacidad (redonda hasta 2, rectangular desde 3). Si agregan o desactivan mesas desde el panel, el plano se actualiza solo.

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { RESTAURANTE } from '@/lib/config';
+import NavbarLinks from './NavbarLinks';
 
 export default async function Navbar() {
   const supabase = createClient();
@@ -20,19 +21,7 @@ export default async function Navbar() {
         <Link href="/" className="font-display text-2xl text-tinta">
           {RESTAURANTE.nombre}
         </Link>
-        <div className="flex items-center gap-5 text-sm font-medium">
-          <a href="#menu" className="hidden hover:text-tomate sm:inline">Menú</a>
-          <a href="#visitanos" className="hidden hover:text-tomate sm:inline">Cómo llegar</a>
-          {esStaff ? (
-            <Link href="/admin" className="btn btn-dark btn-sm">Ir al panel</Link>
-          ) : user ? (
-            <form action="/auth/signout" method="post">
-              <button className="btn btn-ghost btn-sm">Cerrar sesión</button>
-            </form>
-          ) : (
-            <Link href="/login" className="btn btn-ghost btn-sm">Ingresar</Link>
-          )}
-        </div>
+        <NavbarLinks estado={esStaff ? 'staff' : user ? 'cliente' : 'anon'} />
       </nav>
     </header>
   );

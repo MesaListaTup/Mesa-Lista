@@ -2,7 +2,7 @@ import { RESTAURANTE } from '@/lib/config';
 
 export default function Footer() {
   return (
-    <footer id="visitanos" className="bg-tinta text-papel">
+    <footer className="bg-tinta text-papel">
       <div className="mx-auto grid max-w-6xl gap-10 px-5 py-16 md:grid-cols-3">
         <div>
           <p className="font-display text-3xl">{RESTAURANTE.nombre}</p>
