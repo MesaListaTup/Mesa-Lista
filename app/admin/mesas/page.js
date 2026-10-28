@@ -27,7 +27,7 @@ export default async function MesasPage() {
   if (errorMesas) {
     return (
       <div className="rounded-md bg-tomate/10 p-4 text-sm text-tomate" role="alert">
-        No se pudieron cargar las mesas: {errorMesas.message}. Si el mensaje menciona la columna "posicion", ejecutá
+        No se pudieron cargar las mesas: {errorMesas.message}. Si el mensaje menciona la columna &quot;posicion&quot;, ejecutá
         supabase/v6_posicion_mesas.sql en el SQL Editor de Supabase.
       </div>
     );
