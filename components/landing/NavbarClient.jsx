@@ -98,8 +98,17 @@ export default function NavbarClient({ estado, nombre }) {
     botonRef.current?.focus();
   }
 
-  const Logo = ({ className = '' }) => (
-    <Link href="/" className={`${firma.className} leading-none text-white ${className}`} aria-label={`${nombre}, inicio`}>
+  // La tipografía manuscrita tiene la tinta corrida hacia arriba dentro de su caja de texto,
+  // por eso se baja un poco (translate-y en em, escala con el tamaño) para que quede centrada
+  // verticalmente respecto al botón hamburguesa / la X.
+  // Es una función y no un componente para que React no lo vuelva a montar en cada render.
+  const logo = (className = '', alHacerClic) => (
+    <Link
+      href="/"
+      onClick={alHacerClic}
+      className={`${firma.className} block translate-y-[0.12em] leading-none text-white ${className}`}
+      aria-label={`${nombre}, inicio`}
+    >
       {nombre}
     </Link>
   );
@@ -116,7 +125,7 @@ export default function NavbarClient({ estado, nombre }) {
           className={`mx-auto grid max-w-[1600px] grid-cols-2 items-center px-6 transition-all duration-500 md:px-14 lg:grid-cols-[1fr_auto_1fr] ${solida ? 'py-2' : 'py-5 md:py-7'
             }`}
         >
-          <Logo className="text-4xl md:text-5xl" />
+          {logo('text-4xl md:text-5xl')}
 
           <ul className="hidden items-center gap-10 lg:flex">
             {LINKS.map((l) => {
@@ -166,7 +175,7 @@ export default function NavbarClient({ estado, nombre }) {
           }`}
       >
         <div className="flex items-center justify-between">
-          <Logo className="text-4xl md:text-5xl" />
+          {logo('text-4xl md:text-5xl', () => setAbierto(false))}
           <button
             ref={cerrarRef}
             type="button"
@@ -180,7 +189,7 @@ export default function NavbarClient({ estado, nombre }) {
           </button>
         </div>
 
-        <nav aria-label="Secciones" className="flex flex-1 flex-col justify-center gap-1 md:items-center">
+        <nav aria-label="Secciones" className="flex flex-1 flex-col items-center justify-center gap-1 text-center">
           {LINKS_MENU.map((l, i) => {
             const clases = `font-display text-4xl transition-all duration-500 hover:text-white/60 sm:text-5xl md:py-1 ${abierto ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
               }`;
@@ -206,7 +215,7 @@ export default function NavbarClient({ estado, nombre }) {
           })}
         </nav>
 
-        <div className="flex flex-wrap items-center gap-x-8 gap-y-3 font-display text-xs font-semibold uppercase tracking-[0.2em] md:justify-center">
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-3 font-display text-xs font-semibold uppercase tracking-[0.2em] justify-center">
           {estado === 'anonimo' && (
             <>
               <Link href="/login" onClick={() => setAbierto(false)} className="border-b border-white/60 pb-0.5 hover:border-white">

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { Mrs_Saint_Delafield } from 'next/font/google';
 import { createClient } from '@/lib/supabase/client';
@@ -263,7 +264,9 @@ export default function ReservaModal() {
   const resumen = `${formatFecha(fecha)} · ${textoPersonas} · ${hora}${mesaElegida && paso === 'datos' ? ` · Mesa ${mesaElegida.numero_mesa}` : ''}`;
   const idxHora = HORARIOS.indexOf(hora);
 
-  return (
+  // Se dibuja en <body> con un portal: en la landing el modal vive dentro de un contenedor "isolate"
+  // (stacking context) y por eso quedaba por debajo del navbar, que seguía recibiendo clics.
+  return createPortal(
     <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center sm:p-4">
       <div className="reserva-fade absolute inset-0 bg-black/70" onClick={() => setAbierto(false)} aria-hidden="true" />
 
@@ -481,6 +484,7 @@ export default function ReservaModal() {
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
