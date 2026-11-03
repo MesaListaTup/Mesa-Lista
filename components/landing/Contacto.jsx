@@ -31,8 +31,9 @@ export default function Contacto() {
     setForm({ nombre: '', email: '', mensaje: '' });
   }
 
+  // scroll-mt-8: la etiqueta "Escribinos" queda a la misma altura que en las demás páginas (ver Historia.jsx)
   return (
-    <section id="contacto" className="scroll-mt-20 py-20 text-white md:py-28">
+    <section id="contacto" className="scroll-mt-8 py-20 text-white md:py-28">
       <div className="mx-auto grid max-w-[1600px] gap-10 px-6 md:px-14 lg:grid-cols-12 lg:gap-16">
         <Reveal className="lg:col-span-5">
           <p className={etiqueta}>Escribinos</p>

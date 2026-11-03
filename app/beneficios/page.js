@@ -6,7 +6,7 @@ import Footer from '@/components/landing/Footer';
 import ReservaModal from '@/components/landing/ReservaModal';
 import Reveal from '@/components/landing/Reveal';
 import BeneficiosLista from '@/components/beneficios/BeneficiosLista';
-import { PUNTOS_POR_RESERVA } from '@/lib/puntos';
+import TutorialPuntos from '@/components/beneficios/TutorialPuntos';
 
 export const metadata = {
   title: 'Beneficios · Mesa Lista',
@@ -28,12 +28,6 @@ export default async function BeneficiosPage() {
     user ? supabase.from('users').select('puntos').eq('id', user.id).single() : Promise.resolve({ data: null }),
   ]);
   const puntos = user ? (perfilRes.data?.puntos ?? 0) : null;
-
-  const pasos = [
-    ['1', `Reservá y sumá ${PUNTOS_POR_RESERVA} puntos con cada reserva.`],
-    ['2', 'Canjeá tus puntos por un cupón de descuento.'],
-    ['3', 'Mostrale el código al mesero cuando estés en el local.'],
-  ];
 
   return (
     <>
@@ -71,16 +65,7 @@ export default async function BeneficiosPage() {
               )}
             </Reveal>
 
-            <ol className="mt-10 grid gap-6 sm:grid-cols-3">
-              {pasos.map(([n, texto], i) => (
-                <li key={n}>
-                  <Reveal className="flex items-start gap-4" delay={i * 100}>
-                    <span className="font-display text-4xl leading-none text-white/40" aria-hidden="true">{n}</span>
-                    <p className="text-white/75">{texto}</p>
-                  </Reveal>
-                </li>
-              ))}
-            </ol>
+            <TutorialPuntos />
 
             <div className="mt-12">
               <BeneficiosLista beneficios={beneficios ?? []} puntos={puntos} />

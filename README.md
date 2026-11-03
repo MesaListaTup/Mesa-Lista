@@ -36,7 +36,7 @@ app/
   login/page.js           Login y registro
   auth/signout/route.js   Cerrar sesión
   admin/
-    layout.js             Protege el panel: solo roles admin y staff
+    layout.js             Protege el panel: solo rol admin (ver lib/roles.js)
     page.js               Resumen del día (métricas + gráfico)
     reservas/             Confirmar, cancelar, completar, asignar mesa
     mesas/                Grilla de mesas (libre / reservada / ocupada / inactiva)
