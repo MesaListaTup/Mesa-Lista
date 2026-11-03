@@ -42,13 +42,14 @@ function Flecha({ dir, ...props }) {
   );
 }
 
+// Selector compacto: dos van lado a lado (personas / horario) para ahorrar altura. Flechas de 40px, cómodas con el pulgar.
 function Selector({ valor, etiqueta, onMenos, onMas, menosOff, masOff, nombre }) {
   return (
-    <div className="flex items-center justify-center gap-8 border-t border-tinta/10 py-3">
+    <div className="flex items-center justify-between border border-tinta/15 px-1 py-1">
       <Flecha dir="izq" onClick={onMenos} disabled={menosOff} aria-label={`Menos ${nombre}`} />
-      <div className="w-28 text-center" aria-live="polite">
-        <p className="text-2xl leading-tight">{valor}</p>
-        <p className="text-sm text-tinta/60">{etiqueta}</p>
+      <div className="min-w-0 flex-1 text-center" aria-live="polite">
+        <p className="text-xl leading-tight">{valor}</p>
+        <p className="text-xs text-tinta/60">{etiqueta}</p>
       </div>
       <Flecha dir="der" onClick={onMas} disabled={masOff} aria-label={`Más ${nombre}`} />
     </div>
@@ -277,7 +278,7 @@ export default function ReservaModal() {
         aria-labelledby="reserva-titulo"
         className="reserva-pop relative flex h-[100dvh] w-full flex-col bg-white text-tinta sm:h-auto sm:max-h-[92dvh] sm:max-w-[600px]"
       >
-        <div className="mx-5 mt-4 flex shrink-0 items-center justify-between border-b border-tinta pb-3">
+        <div className="mx-5 mt-3 flex shrink-0 items-center justify-between border-b border-tinta pb-2">
           <h2 id="reserva-titulo" className="text-sm font-medium">Reserva de mesa</h2>
           <button ref={cerrarRef} type="button" onClick={() => setAbierto(false)} aria-label="Cerrar" className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-tinta/10">
             <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" /></svg>
@@ -294,23 +295,21 @@ export default function ReservaModal() {
           </div>
         )}
 
-        <div key={paso} className="reserva-paso min-h-0 flex-1 overflow-y-auto px-5 pb-5 pt-4">
+        <div key={paso} className="reserva-paso min-h-0 flex-1 overflow-y-auto px-5 pb-4 pt-3">
           {/* 1. Calendario, personas y horario */}
           {paso === 'buscar' && (
             <>
-              <div className="relative -mt-0 h-28 overflow-hidden sm:h-32">
+              {/* Encabezado con imagen: solo en pantallas medianas en adelante y bajo (en celular el espacio es para los controles) */}
+              <div className="relative mb-3 hidden h-16 overflow-hidden sm:block">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/img/hero-desktop.jpg" alt="" aria-hidden="true" className="h-full w-full object-cover object-[50%_35%]" />
                 <div className="absolute inset-0 bg-black/55" />
-                <p className={`${firma.className} absolute inset-0 flex items-center justify-center text-6xl text-white`}>{RESTAURANTE.nombre}</p>
+                <p className={`${firma.className} absolute inset-0 flex items-center justify-center text-5xl text-white`}>{RESTAURANTE.nombre}</p>
               </div>
-              <p className="py-3 text-center text-sm text-tinta/70">
-                Para grupos de más de {MAX_PERSONAS} personas escribinos a {RESTAURANTE.email} o llamanos al {RESTAURANTE.telefono}.
-              </p>
 
               <CalendarioReserva fecha={fecha} onSelect={setFecha} hoy={hoy} diasCerrados={DIAS_CERRADOS} />
 
-              <div className="mt-2">
+              <div className="mt-3 grid grid-cols-2 gap-3">
                 <Selector
                   nombre="personas"
                   valor={personas}
@@ -331,11 +330,9 @@ export default function ReservaModal() {
                 />
               </div>
 
-              {error && <p role="alert" className="mt-3 rounded-md bg-tomate/10 p-3 text-sm text-tomate">{error}</p>}
-
-              <button type="button" onClick={buscar} disabled={buscando} className="btn btn-dark mt-3 w-full py-3 text-base">
-                {buscando ? 'Buscando mesas…' : 'Buscar mesas'}
-              </button>
+              <p className="mt-3 text-center text-xs text-tinta/60">
+                Para grupos de más de {MAX_PERSONAS} personas escribinos a {RESTAURANTE.email} o llamanos al {RESTAURANTE.telefono}.
+              </p>
             </>
           )}
 
@@ -483,6 +480,16 @@ export default function ReservaModal() {
             </div>
           )}
         </div>
+
+        {/* CTA del paso 1 siempre visible, fuera del área que scrollea (respeta la barra inferior del celular) */}
+        {paso === 'buscar' && (
+          <div className="shrink-0 border-t border-tinta/10 px-5 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
+            {error && <p role="alert" className="mb-2 rounded-md bg-tomate/10 p-2.5 text-sm text-tomate">{error}</p>}
+            <button type="button" onClick={buscar} disabled={buscando} className="btn btn-dark w-full py-3 text-base">
+              {buscando ? 'Buscando mesas…' : 'Buscar mesas'}
+            </button>
+          </div>
+        )}
       </div>
     </div>,
     document.body

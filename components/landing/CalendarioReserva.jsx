@@ -35,11 +35,11 @@ export default function CalendarioReserva({ fecha, onSelect, hoy, maxDias = 90, 
     });
   }
 
-  const flecha = 'flex h-9 w-9 items-center justify-center rounded-full text-tinta transition-colors hover:bg-tinta/10 disabled:cursor-not-allowed disabled:text-tinta/25 disabled:hover:bg-transparent';
+  const flecha = 'flex h-10 w-10 items-center justify-center rounded-full text-tinta transition-colors hover:bg-tinta/10 disabled:cursor-not-allowed disabled:text-tinta/25 disabled:hover:bg-transparent';
 
   return (
     <div>
-      <div className="flex items-center justify-between bg-tinta/[0.06] px-3 py-3">
+      <div className="flex items-center justify-between bg-tinta/[0.06] px-3 py-1.5">
         <button type="button" onClick={() => mover(-1)} disabled={enMesActual} aria-label="Mes anterior" className={flecha}>
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
         </button>
@@ -49,15 +49,15 @@ export default function CalendarioReserva({ fecha, onSelect, hoy, maxDias = 90, 
         </button>
       </div>
 
-      <div className="grid grid-cols-7 bg-tinta/[0.06] pb-2 text-center text-[10px] font-semibold tracking-[0.15em] text-tinta/70">
+      <div className="grid grid-cols-7 bg-tinta/[0.06] pb-1 text-center text-[10px] font-semibold tracking-[0.15em] text-tinta/70">
         {DIAS.map((d) => (
-          <span key={d} className="py-2">{d}</span>
+          <span key={d} className="py-1.5">{d}</span>
         ))}
       </div>
 
       <div className="grid grid-cols-7 gap-px border border-tinta/10 bg-tinta/10">
         {celdas.map((dia, i) => {
-          if (dia === null) return <span key={`v${i}`} className="h-11 bg-tinta/[0.04] sm:h-12" />;
+          if (dia === null) return <span key={`v${i}`} className="h-10 bg-tinta/[0.04]" />;
 
           const s = iso(vista.y, vista.m, dia);
           const diaSemana = new Date(Date.UTC(vista.y, vista.m, dia)).getUTCDay();
@@ -76,7 +76,7 @@ export default function CalendarioReserva({ fecha, onSelect, hoy, maxDias = 90, 
               aria-current={esHoy ? 'date' : undefined}
               aria-label={`${dia} de ${primero.toLocaleDateString('es-AR', { month: 'long', timeZone: 'UTC' })}${cerrado ? ', cerrado' : ''}`}
               title={cerrado ? 'Cerrado' : undefined}
-              className={`relative flex h-11 flex-col items-center justify-center text-sm transition-colors sm:h-12 ${
+              className={`relative flex h-10 flex-col items-center justify-center text-sm transition-colors ${
                 elegido
                   ? 'bg-tinta font-semibold text-white'
                   : deshabilitado
@@ -85,7 +85,7 @@ export default function CalendarioReserva({ fecha, onSelect, hoy, maxDias = 90, 
               }`}
             >
               {dia}
-              {esHoy && <span className={`absolute bottom-1.5 h-1 w-1 rounded-full ${elegido ? 'bg-white' : 'bg-tomate'}`} />}
+              {esHoy && <span className={`absolute bottom-1 h-1 w-1 rounded-full ${elegido ? 'bg-white' : 'bg-tomate'}`} />}
             </button>
           );
         })}

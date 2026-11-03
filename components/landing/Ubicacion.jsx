@@ -57,8 +57,9 @@ export default function Ubicacion() {
     { nombre: 'Facebook', href: FACEBOOK_URL, Icono: IconoFacebook },
     { nombre: 'WhatsApp', href: whatsappLink, Icono: IconoWhatsapp },
   ];
+  // scroll-mt-8: la etiqueta "Visitanos" queda a la misma altura que en las demás páginas (ver Historia.jsx)
   return (
-    <section id="visitanos" className="scroll-mt-20 py-20 text-white md:py-28">
+    <section id="visitanos" className="scroll-mt-8 py-20 text-white md:py-28">
       <div className="mx-auto max-w-[1600px] px-6 md:px-14">
         <Reveal>
           <p className={etiqueta}>Visitanos</p>

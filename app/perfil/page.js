@@ -9,6 +9,7 @@ import BotonReservas from '@/components/landing/BotonReservas';
 import Reveal from '@/components/landing/Reveal';
 import AvatarUploader from '@/components/perfil/AvatarUploader';
 import { PUNTOS_POR_RESERVA } from '@/lib/puntos';
+import { puedeVerPanel } from '@/lib/roles';
 import { formatCodigo, fechaHoraAR } from '@/lib/cupones';
 
 export const metadata = { title: 'Mi perfil · Mesa Lista' };
@@ -52,7 +53,7 @@ export default async function PerfilPage() {
   const nombreCompleto = [perfil?.nombre, perfil?.apellido].filter(Boolean).join(' ') || nombre;
   const iniciales = (perfil?.nombre?.[0] ?? nombre[0] ?? '?').toUpperCase() + (perfil?.apellido?.[0] ?? '').toUpperCase();
   const puntos = perfil?.puntos ?? 0;
-  const esStaff = ['admin', 'staff'].includes(perfil?.rol);
+  const esAdmin = puedeVerPanel(perfil?.rol);
 
   const datos = [
     ['Email', perfil?.email ?? user.email],
@@ -91,7 +92,7 @@ export default async function PerfilPage() {
                 </dl>
 
                 <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
-                  {esStaff && (
+                  {esAdmin && (
                     <Link href="/admin" className="border-b border-white/60 pb-0.5 hover:border-white">Ir al panel</Link>
                   )}
                   <form action="/auth/signout" method="post">
