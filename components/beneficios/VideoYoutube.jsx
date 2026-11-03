@@ -31,6 +31,9 @@ function cargarAPI() {
   return promesaAPI;
 }
 
+// Franja que se recorta arriba y abajo del iframe: tiene que ser mayor que la barra de título de YouTube (~60-80 px).
+const RECORTE = 'max(110px, 20%)';
+
 const mmss = (seg = 0) => `${Math.floor(seg / 60)}:${String(Math.floor(seg % 60)).padStart(2, '0')}`;
 
 function Icono({ d, size = 22 }) {
@@ -60,6 +63,7 @@ export default function VideoYoutube({ id, titulo, poster }) {
   const [duracion, setDuracion] = useState(0);
   const [pantallaCompleta, setPantallaCompleta] = useState(false);
   const [puedePantalla, setPuedePantalla] = useState(false);
+  const [imagen, setImagen] = useState(poster || `https://i.ytimg.com/vi/${id}/hqdefault.jpg`);
 
   useEffect(() => {
     setPuedePantalla(!!(document.fullscreenEnabled || document.webkitFullscreenEnabled));
@@ -172,8 +176,8 @@ export default function VideoYoutube({ id, titulo, poster }) {
     }
   }
 
-  const imagen = poster || `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
   // La imagen tapa el iframe antes de empezar, mientras carga, en pausa y al terminar
+  const miniatura = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
   const tapado = !activo || !listo || !reproduciendo;
   const porcentaje = duracion ? (tiempo / duracion) * 100 : 0;
 
@@ -182,17 +186,29 @@ export default function VideoYoutube({ id, titulo, poster }) {
       ref={contenedorRef}
       className={`group relative w-full overflow-hidden border border-white/10 bg-black ${pantallaCompleta ? 'h-full rounded-none' : 'aspect-video rounded-2xl'}`}
     >
-      {/* Reproductor de YouTube (sin clics: se controla con la barra de abajo) */}
+      {/* Reproductor de YouTube (sin clics: se controla con la barra de abajo).
+          El iframe es más alto que el recuadro (RECORTE arriba y abajo): el video queda centrado y exactamente del
+          tamaño del recuadro, mientras que el título, el logo y los botones de YouTube caen en las franjas
+          recortadas por overflow-hidden y no se ven. */}
       {activo && (
-        <div className="pointer-events-none absolute inset-0 [&_iframe]:h-full [&_iframe]:w-full">
+        <div
+          className="pointer-events-none absolute inset-x-0 [&_iframe]:h-full [&_iframe]:w-full"
+          style={{ top: `calc(-1 * ${RECORTE})`, height: `calc(100% + 2 * ${RECORTE})` }}
+        >
           <div ref={destinoRef} />
         </div>
       )}
 
       {/* Imagen de portada */}
-      <div className={`absolute inset-0 transition-opacity duration-300 ${tapado ? 'opacity-100' : 'pointer-events-none opacity-0'}`}>
+      <div className={`absolute inset-0 bg-black transition-opacity duration-300 ${tapado ? 'opacity-100' : 'pointer-events-none opacity-0'}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={imagen} alt="" loading="lazy" className="h-full w-full object-cover" />
+        <img
+          src={imagen}
+          alt=""
+          loading="lazy"
+          onError={() => imagen !== miniatura && setImagen(miniatura)}
+          className="h-full w-full object-cover"
+        />
         <div className="absolute inset-0 bg-black/25" />
       </div>
 
