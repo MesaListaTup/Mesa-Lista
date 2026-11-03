@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { Mrs_Saint_Delafield } from 'next/font/google';
 import { createClient } from '@/lib/supabase/client';
 import { RESTAURANTE } from '@/lib/config';
 import { hoyAR, sumarDias, formatFecha, formatHora } from '@/lib/utils';
 import { EVENTO_RESERVA } from '@/lib/reserva-evento';
+import { PUNTOS_POR_RESERVA } from '@/lib/puntos';
 import CalendarioReserva from './CalendarioReserva';
 import PlanoMesas from './PlanoMesas';
 import './reserva.css';
@@ -77,6 +79,7 @@ export default function ReservaModal() {
   const [telefono, setTelefono] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [reserva, setReserva] = useState(null);
+  const [logueado, setLogueado] = useState(false);
 
   const panelRef = useRef(null);
   const cerrarRef = useRef(null);
@@ -87,6 +90,25 @@ export default function ReservaModal() {
     window.addEventListener(EVENTO_RESERVA, abrir);
     return () => window.removeEventListener(EVENTO_RESERVA, abrir);
   }, []);
+
+  // Al abrir: si hay sesión iniciada, se completa el nombre con el del perfil y se avisa que la reserva suma puntos
+  useEffect(() => {
+    if (!abierto) return;
+    let cancelado = false;
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (cancelado) return;
+      setLogueado(!!user);
+      if (!user) return;
+      const { data: perfil } = await supabase.from('users').select('nombre, apellido').eq('id', user.id).single();
+      if (cancelado || !perfil) return;
+      const completo = [perfil.nombre, perfil.apellido].filter(Boolean).join(' ');
+      setNombre((actual) => actual || completo);
+    });
+    return () => {
+      cancelado = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [abierto]);
 
   // Modal abierto: bloquea el scroll, atrapa el foco, cierra con Escape y devuelve el foco al cerrar
   useEffect(() => {
@@ -225,7 +247,7 @@ export default function ReservaModal() {
       }
       return;
     }
-    setReserva({ nombre, fecha, hora, personas, mesa: mesas.find((m) => m.id === mesaId)?.numero_mesa ?? null });
+    setReserva({ nombre, fecha, hora, personas, mesa: mesas.find((m) => m.id === mesaId)?.numero_mesa ?? null, conPuntos: logueado });
     setPaso('ok');
   }
 
@@ -411,6 +433,15 @@ export default function ReservaModal() {
                 {mesaElegida ? `Mesa ${mesaElegida.numero_mesa}, elegida por vos.` : 'Te asignamos la mejor mesa libre.'} La reserva queda pendiente hasta que el local la confirme.
               </p>
 
+              {logueado ? (
+                <p className="rounded-md bg-sifon p-3 text-sm">Con tu cuenta sumás {PUNTOS_POR_RESERVA} puntos por esta reserva.</p>
+              ) : (
+                <p className="text-sm text-tinta/70">
+                  ¿Querés sumar {PUNTOS_POR_RESERVA} puntos? <Link href="/login" className="underline underline-offset-2 hover:text-tomate">Ingresá</Link> o{' '}
+                  <Link href="/login?modo=registro" className="underline underline-offset-2 hover:text-tomate">creá tu cuenta</Link> antes de reservar.
+                </p>
+              )}
+
               {error && <p role="alert" className="rounded-md bg-tomate/10 p-3 text-sm text-tomate">{error}</p>}
 
               <button type="submit" disabled={enviando} className="btn btn-primary w-full py-3 text-base">
@@ -436,6 +467,15 @@ export default function ReservaModal() {
               <p className="mx-auto mt-4 max-w-sm text-sm text-tinta/70">
                 Queda pendiente hasta que el local la confirme. Si necesitamos algo, te llamamos al teléfono que dejaste.
               </p>
+              {reserva.conPuntos ? (
+                <p className="mx-auto mt-4 max-w-sm rounded-md bg-sifon p-3 text-sm">
+                  ¡Sumaste {PUNTOS_POR_RESERVA} puntos! Los ves en <Link href="/perfil" className="underline underline-offset-2">tu perfil</Link>.
+                </p>
+              ) : (
+                <p className="mx-auto mt-4 max-w-sm text-sm text-tinta/70">
+                  <Link href="/login?modo=registro" className="underline underline-offset-2 hover:text-tomate">Creá tu cuenta</Link> y sumá {PUNTOS_POR_RESERVA} puntos en tus próximas reservas.
+                </p>
+              )}
               <button type="button" onClick={() => setAbierto(false)} className="btn btn-dark mt-6 px-8">Cerrar</button>
             </div>
           )}

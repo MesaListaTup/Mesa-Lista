@@ -11,7 +11,7 @@ const firma = Mrs_Saint_Delafield({ subsets: ['latin'], weight: '400' });
 // Los anclas llevan "/" adelante para que también funcionen desde /menu
 const LINKS = [
   { href: '/menu', label: 'Menú' },
-  { href: '/#visitanos', label: 'Dónde encontrarnos' },
+  { href: '/beneficios', label: 'Beneficios' },
   { href: '/#contacto', label: 'Contacto' },
 ];
 
@@ -208,8 +208,18 @@ export default function NavbarClient({ estado, nombre }) {
 
         <div className="flex flex-wrap items-center gap-x-8 gap-y-3 font-display text-xs font-semibold uppercase tracking-[0.2em] md:justify-center">
           {estado === 'anonimo' && (
-            <Link href="/login" onClick={() => setAbierto(false)} className="border-b border-white/60 pb-0.5 hover:border-white">
-              Ingresar
+            <>
+              <Link href="/login" onClick={() => setAbierto(false)} className="border-b border-white/60 pb-0.5 hover:border-white">
+                Ingresar
+              </Link>
+              <Link href="/login?modo=registro" onClick={() => setAbierto(false)} className="border-b border-white/60 pb-0.5 hover:border-white">
+                Registrarme
+              </Link>
+            </>
+          )}
+          {estado !== 'anonimo' && (
+            <Link href="/perfil" onClick={() => setAbierto(false)} className="border-b border-white/60 pb-0.5 hover:border-white">
+              Mi perfil
             </Link>
           )}
           {estado === 'staff' && (
