@@ -110,14 +110,14 @@ export default function ReservaForm() {
   if (reserva) {
     return (
       <div className="rounded-lg bg-white p-7 shadow-xl">
-        <h2 className="font-display text-3xl">¡Recibimos tu reserva, {reserva.nombre.split(' ')[0]}!</h2>
+        <h2 className="font-display text-3xl">¡Tu reserva está confirmada, {reserva.nombre.split(' ')[0]}!</h2>
         <p className="mt-3 text-tinta/80">
           {formatFecha(reserva.fecha)} a las {formatHora(reserva.hora)} hs para {reserva.personas}{' '}
           {reserva.personas === 1 ? 'persona' : 'personas'}
           {reserva.mesa ? `, en la mesa ${reserva.mesa}` : ''}.
         </p>
         <p className="mt-2 text-sm text-tinta/70">
-          Queda pendiente hasta que el local la confirme. Si necesitamos algo, te llamamos al teléfono que dejaste.
+          Si necesitamos algo, te llamamos al teléfono que dejaste.
         </p>
         <button
           className="btn btn-dark mt-6"
@@ -190,11 +190,10 @@ export default function ReservaForm() {
                     disabled={!s.disponible}
                     onClick={() => setHora(s.hora)}
                     aria-pressed={hora === s.hora}
-                    className={`rounded-md border px-3 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:border-tinta/10 disabled:text-tinta/30 disabled:line-through ${
-                      hora === s.hora
+                    className={`rounded-md border px-3 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:border-tinta/10 disabled:text-tinta/30 disabled:line-through ${hora === s.hora
                         ? 'border-tinta bg-tinta text-white'
                         : 'border-tinta/25 bg-white hover:border-tinta'
-                    }`}
+                      }`}
                   >
                     {formatHora(s.hora)}
                   </button>

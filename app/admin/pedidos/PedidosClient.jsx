@@ -8,6 +8,7 @@ import Badge from '@/components/admin/Badge';
 
 const CATEGORIAS = [
   { id: 'comida', titulo: 'Comida' },
+  { id: 'postres', titulo: 'Postres' },
   { id: 'cafeteria', titulo: 'Cafetería' },
   { id: 'bebida', titulo: 'Bebida' },
 ];

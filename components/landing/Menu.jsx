@@ -4,6 +4,7 @@ import Reveal from './Reveal';
 
 const CATEGORIAS = [
   { id: 'comida', titulo: 'Para comer' },
+  { id: 'postres', titulo: 'Postres' },
   { id: 'cafeteria', titulo: 'Cafetería' },
   { id: 'bebida', titulo: 'Para tomar' },
 ];
@@ -29,7 +30,7 @@ export default async function Menu() {
       {!productos?.length ? (
         <p className="mt-10 rounded-md bg-sifon p-4 text-sm text-tinta">La carta se está actualizando. Volvé en un rato.</p>
       ) : (
-        <div className="mt-12 grid gap-6 md:grid-cols-3">
+        <div className="mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
           {CATEGORIAS.map((cat, i) => {
             const items = productos.filter((p) => p.categoria === cat.id);
             if (!items.length) return null;

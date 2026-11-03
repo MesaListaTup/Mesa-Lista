@@ -3,8 +3,13 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { formatFecha, formatHora } from '@/lib/utils';
+import { formatFecha, formatHora, formatHoraTS } from '@/lib/utils';
 import Badge from '@/components/admin/Badge';
+
+// Día en que se hizo la reserva (hora de Argentina), ej. "3 nov"
+function diaCreada(ts) {
+  return new Date(ts).toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', day: 'numeric', month: 'short' });
+}
 
 export default function ReservasTable({ reservas, mesas }) {
   const supabase = createClient();
@@ -39,10 +44,11 @@ export default function ReservasTable({ reservas, mesas }) {
       {error && <p role="alert" className="rounded-md bg-tomate/10 p-3 text-sm text-tomate">{error}</p>}
 
       <div className="overflow-x-auto rounded-lg border border-tinta/10 bg-white">
-        <table className="w-full min-w-[820px] text-left text-sm">
+        <table className="w-full min-w-[940px] text-left text-sm">
           <thead className="border-b border-tinta/10 bg-tinta/5 text-xs text-tinta/70">
             <tr>
               <th className="px-4 py-3 font-semibold">Fecha y hora</th>
+              <th className="px-4 py-3 font-semibold">Reservada el</th>
               <th className="px-4 py-3 font-semibold">Cliente</th>
               <th className="px-4 py-3 font-semibold">Personas</th>
               <th className="px-4 py-3 font-semibold">Mesa</th>
@@ -58,6 +64,16 @@ export default function ReservasTable({ reservas, mesas }) {
                   <td className="px-4 py-3 whitespace-nowrap">
                     <span className="capitalize">{formatFecha(r.fecha_reserva)}</span>{' '}
                     <span className="font-semibold tabular-nums">{formatHora(r.hora_reserva)}</span>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-tinta/70">
+                    {r.created_at ? (
+                      <>
+                        <span>{diaCreada(r.created_at)}</span>{' '}
+                        <span className="font-semibold tabular-nums">{formatHoraTS(r.created_at)}</span>
+                      </>
+                    ) : (
+                      '—'
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <p className="font-medium">{r.nombre_cliente}</p>

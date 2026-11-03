@@ -16,7 +16,7 @@ export default async function ReservasPage({ searchParams }) {
 
   let query = supabase
     .from('reservas')
-    .select('id,nombre_cliente,telefono_cliente,fecha_reserva,hora_reserva,cantidad_personas,estado,mesa_id,mesas(numero_mesa)')
+    .select('id,nombre_cliente,telefono_cliente,fecha_reserva,hora_reserva,cantidad_personas,estado,created_at,mesa_id,mesas(numero_mesa)')
     .order('fecha_reserva', { ascending: vista !== 'todas' })
     .order('hora_reserva', { ascending: vista !== 'todas' });
 

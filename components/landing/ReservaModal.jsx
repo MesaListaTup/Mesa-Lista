@@ -430,7 +430,7 @@ export default function ReservaModal() {
                 <input id="rm-telefono" type="tel" required minLength={6} maxLength={30} pattern="[0-9+\(\)\s.\-]{6,30}" title="Solo números, espacios y + ( ) -" value={telefono} onChange={(e) => setTelefono(e.target.value)} className="input" autoComplete="tel" placeholder="11 5555 0123" />
               </div>
               <p className="text-sm text-tinta/70">
-                {mesaElegida ? `Mesa ${mesaElegida.numero_mesa}, elegida por vos.` : 'Te asignamos la mejor mesa libre.'} La reserva queda pendiente hasta que el local la confirme.
+                {mesaElegida ? `Mesa ${mesaElegida.numero_mesa}, elegida por vos.` : 'Te asignamos la mejor mesa libre.'} Tu reserva se confirma automáticamente.
               </p>
 
               {logueado ? (
@@ -456,7 +456,7 @@ export default function ReservaModal() {
               <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-sifon">
                 <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
               </span>
-              <h3 className="mt-4 font-display text-3xl">¡Recibimos tu reserva, {reserva.nombre.split(' ')[0]}!</h3>
+              <h3 className="mt-4 font-display text-3xl">¡Tu reserva está confirmada, {reserva.nombre.split(' ')[0]}!</h3>
               <p className="mt-3 capitalize text-tinta/80">
                 {formatFecha(reserva.fecha)} · {reserva.hora} hs
               </p>
@@ -465,7 +465,7 @@ export default function ReservaModal() {
                 {reserva.mesa ? `, mesa ${reserva.mesa}` : ''}
               </p>
               <p className="mx-auto mt-4 max-w-sm text-sm text-tinta/70">
-                Queda pendiente hasta que el local la confirme. Si necesitamos algo, te llamamos al teléfono que dejaste.
+                Si necesitamos algo, te llamamos al teléfono que dejaste.
               </p>
               {reserva.conPuntos ? (
                 <p className="mx-auto mt-4 max-w-sm rounded-md bg-sifon p-3 text-sm">

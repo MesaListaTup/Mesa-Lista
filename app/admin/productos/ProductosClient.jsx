@@ -72,6 +72,7 @@ export default function ProductosClient({ productos }) {
           <label htmlFor="cat" className="label">Categoría</label>
           <select id="cat" value={form.categoria} onChange={set('categoria')} className="input">
             <option value="comida">Comida</option>
+            <option value="postres">Postres</option>
             <option value="cafeteria">Cafetería</option>
             <option value="bebida">Bebida</option>
           </select>
