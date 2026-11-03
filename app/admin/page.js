@@ -1,13 +1,17 @@
 import { createClient } from '@/lib/supabase/server';
-import { hoyAR, sumarDias, inicioDiaAR, formatHora, formatPrecio } from '@/lib/utils';
-import Badge from '@/components/admin/Badge';
+import { hoyAR, sumarDias, inicioDiaAR, minutosAhoraAR } from '@/lib/utils';
+import DashboardView from '@/components/admin/DashboardView';
 
 export default async function Dashboard() {
   const supabase = createClient();
   const hoy = hoyAR();
   const dias = Array.from({ length: 7 }, (_, i) => sumarDias(hoy, i));
 
-  const [reservasRes, mesasRes, pedidosRes] = await Promise.all([
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const [reservasRes, mesasRes, pedidosRes, perfilRes] = await Promise.all([
     supabase
       .from('reservas')
       .select('id,fecha_reserva,hora_reserva,nombre_cliente,cantidad_personas,estado,mesas(numero_mesa)')
@@ -17,6 +21,7 @@ export default async function Dashboard() {
       .order('hora_reserva'),
     supabase.from('mesas').select('id,estado'),
     supabase.from('pedidos').select('total').gte('created_at', inicioDiaAR()),
+    user ? supabase.from('users').select('nombre').eq('id', user.id).single() : Promise.resolve({ data: null }),
   ]);
 
   const reservas = reservasRes.data ?? [];
@@ -29,71 +34,51 @@ export default async function Dashboard() {
   const mesasOcupadas = mesas.filter((m) => m.estado === 'ocupada').length;
   const ventas = pedidos.reduce((acc, p) => acc + Number(p.total), 0);
 
-  const porDia = dias.map((d) => ({ dia: d, total: reservas.filter((r) => r.fecha_reserva === d).length }));
-  const max = Math.max(1, ...porDia.map((d) => d.total));
+  const porDia = dias.map((d) => ({
+    dia: d,
+    total: reservas.filter((r) => r.fecha_reserva === d).length,
+    etiqueta: new Date(`${d}T12:00:00`).toLocaleDateString('es-AR', { weekday: 'short' }).replace('.', ''),
+    largo: new Date(`${d}T12:00:00`).toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' }),
+  }));
 
-  const tarjetas = [
-    { titulo: 'Reservas de hoy', valor: reservasHoy.length },
-    { titulo: 'Por confirmar (7 días)', valor: pendientes, resaltar: pendientes > 0 },
-    { titulo: 'Mesas ocupadas', valor: `${mesasOcupadas} de ${mesasActivas}` },
-    { titulo: 'Pedidos de hoy', valor: pedidos.length },
-    { titulo: 'Ventas de hoy', valor: formatPrecio(ventas) },
-  ];
+  const estadosMesas = ['libre', 'reservada', 'ocupada', 'inactiva'].map((estado) => ({
+    estado,
+    cantidad: mesas.filter((m) => m.estado === estado).length,
+  }));
+
+  const hora = minutosAhoraAR() / 60;
+  const saludo = hora < 12 ? 'Buen día' : hora < 20 ? 'Buenas tardes' : 'Buenas noches';
+  const fechaHoy = new Date().toLocaleDateString('es-AR', {
+    timeZone: 'America/Argentina/Buenos_Aires',
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
 
   return (
-    <div className="space-y-8">
-      <h1 className="font-display text-4xl">Resumen del día</h1>
-
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        {tarjetas.map((t) => (
-          <div key={t.titulo} className={`panel ${t.resaltar ? 'border-limon bg-limon/20' : ''}`}>
-            <p className="text-sm text-tinta/70">{t.titulo}</p>
-            <p className="mt-2 text-2xl font-bold tabular-nums">{t.valor}</p>
-          </div>
-        ))}
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-2">
-        <section className="panel">
-          <h2 className="font-semibold">Reservas por día, próximos 7 días</h2>
-          <div className="mt-6 flex h-44 items-end gap-3" role="img" aria-label="Gráfico de barras de reservas por día">
-            {porDia.map((d) => (
-              <div key={d.dia} className="flex h-full flex-1 flex-col items-center justify-end gap-1">
-                <span className="text-xs font-semibold tabular-nums">{d.total}</span>
-                <div
-                  className={`w-full rounded-t ${d.dia === hoy ? 'bg-tomate' : 'bg-tinta'}`}
-                  style={{ height: `${Math.max((d.total / max) * 100, 2)}%` }}
-                />
-                <span className="text-[11px] text-tinta/60">
-                  {new Date(`${d.dia}T12:00:00`).toLocaleDateString('es-AR', { weekday: 'short' })}
-                </span>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="panel">
-          <h2 className="font-semibold">Agenda de hoy</h2>
-          {reservasHoy.length === 0 ? (
-            <p className="mt-4 text-sm text-tinta/60">No hay reservas para hoy.</p>
-          ) : (
-            <ul className="mt-3 divide-y divide-tinta/10">
-              {reservasHoy.map((r) => (
-                <li key={r.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
-                  <div>
-                    <span className="font-semibold tabular-nums">{formatHora(r.hora_reserva)}</span>{' '}
-                    {r.nombre_cliente}
-                    <span className="text-tinta/60">
-                      {' '}· {r.cantidad_personas} pers.{r.mesas ? `, mesa ${r.mesas.numero_mesa}` : ''}
-                    </span>
-                  </div>
-                  <Badge estado={r.estado} />
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-      </div>
-    </div>
+    <DashboardView
+      saludo={saludo}
+      nombre={perfilRes.data?.nombre?.split(' ')[0] ?? null}
+      fechaHoy={fechaHoy}
+      hoy={hoy}
+      stats={{
+        reservasHoy: reservasHoy.length,
+        pendientes,
+        mesasOcupadas,
+        mesasActivas,
+        pedidos: pedidos.length,
+        ventas,
+      }}
+      porDia={porDia}
+      estadosMesas={estadosMesas}
+      agenda={reservasHoy.map((r) => ({
+        id: r.id,
+        hora: r.hora_reserva,
+        nombre: r.nombre_cliente,
+        personas: r.cantidad_personas,
+        mesa: r.mesas?.numero_mesa ?? null,
+        estado: r.estado,
+      }))}
+    />
   );
 }

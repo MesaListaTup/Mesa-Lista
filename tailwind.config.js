@@ -4,11 +4,12 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        papel: '#FBFAF6',
-        tinta: '#15233B',
-        tomate: '#E5402B',
-        sifon: '#CFE8E4',
-        limon: '#F2D64B',
+        // Los valores viven en globals.css (:root = landing, .panel-theme = panel admin)
+        papel: 'rgb(var(--papel) / <alpha-value>)',
+        tinta: 'rgb(var(--tinta) / <alpha-value>)',
+        tomate: 'rgb(var(--tomate) / <alpha-value>)',
+        sifon: 'rgb(var(--sifon) / <alpha-value>)',
+        limon: 'rgb(var(--limon) / <alpha-value>)',
       },
       fontFamily: {
         display: ['var(--font-display)', 'Georgia', 'serif'],
