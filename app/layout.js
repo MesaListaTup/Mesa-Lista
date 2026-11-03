@@ -16,6 +16,11 @@ const body = Poppins({ subsets: ['latin'], weight: ['400', '500', '600', '700'],
 export const metadata = {
   title: 'Mesa Lista · Reservá tu mesa',
   description: 'Reservá tu mesa online en Mesa Lista. Elegí día, horario y cantidad de personas.',
+  // Favicon: el archivo está en public/img/favicon.svg
+  icons: {
+    icon: [{ url: '/img/favicon.svg', type: 'image/svg+xml' }],
+    shortcut: '/img/favicon.svg',
+  },
 };
 
 export default function RootLayout({ children }) {
