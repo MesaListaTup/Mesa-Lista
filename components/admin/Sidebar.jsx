@@ -11,6 +11,7 @@ const LINKS = [
   { href: '/admin/pedidos', label: 'Pedidos' },
   { href: '/admin/productos', label: 'Productos' },
   { href: '/admin/mensajes', label: 'Mensajes' },
+  { href: '/admin/desarrolladores', label: 'Desarrolladores' },
 ];
 
 export default function Sidebar({ perfil }) {
@@ -47,9 +48,8 @@ export default function Sidebar({ perfil }) {
                 href={l.href}
                 onClick={() => setAbierto(false)}
                 aria-current={activo ? 'page' : undefined}
-                className={`whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                  activo ? 'bg-papel text-tinta' : 'text-papel/80 hover:bg-papel/10'
-                }`}
+                className={`whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium transition-colors ${activo ? 'bg-papel text-tinta' : 'text-papel/80 hover:bg-papel/10'
+                  }`}
               >
                 {l.label}
               </Link>

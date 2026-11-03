@@ -1,0 +1,18 @@
+/* Animaciones del modal de reservas. Se desactivan si la persona pidió "reducir movimiento". */
+@keyframes reserva-fade {
+  from { opacity: 0; }
+}
+@keyframes reserva-pop {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+}
+@keyframes reserva-paso {
+  from { opacity: 0; transform: translateY(8px); }
+}
+
+.reserva-fade { animation: reserva-fade 0.25s ease-out both; }
+.reserva-pop { animation: reserva-pop 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.reserva-paso { animation: reserva-paso 0.3s ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reserva-fade, .reserva-pop, .reserva-paso { animation: none; }
+}
