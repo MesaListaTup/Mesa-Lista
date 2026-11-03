@@ -10,14 +10,14 @@ import { hoyAR, sumarDias, formatFecha, formatHora } from '@/lib/utils';
 import { EVENTO_RESERVA } from '@/lib/reserva-evento';
 import { PUNTOS_POR_RESERVA } from '@/lib/puntos';
 import CalendarioReserva from './CalendarioReserva';
-import PlanoMesas from './PlanoMesas';
+import PlanoMesas, { capacidadMaxima } from './PlanoMesas';
 import './reserva.css';
 
 const firma = Mrs_Saint_Delafield({ subsets: ['latin'], weight: '400' });
 
 // Mismos turnos que la función SQL horarios_disponibles (almuerzo y cena, cada 30 min)
 const HORARIOS = ['12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '20:00', '20:30', '21:00', '21:30', '22:00', '22:30'];
-const MAX_PERSONAS = 8;
+const MAX_PERSONAS = 10; // = capacidad de la mesa más grande. Tiene que coincidir con v_max_personas de supabase/v7_reservas_reglas.sql
 const DIAS_CERRADOS = [1]; // lunes (0 = domingo). Si el local cambia de día de descanso, se cambia acá.
 const DIAS_ALTERNATIVOS = 7;
 
@@ -219,10 +219,10 @@ export default function ReservaModal() {
       return setErrorPlano(true);
     }
     setMesas(data ?? []);
-    // Si la mesa elegida dejó de estar libre, se deselecciona
+    // Si la mesa elegida dejó de estar libre (o no corresponde al grupo), se deselecciona
     setMesaId((actual) => {
       const m = (data ?? []).find((x) => x.id === actual);
-      return m && m.libre && m.capacidad >= personas ? actual : '';
+      return m && m.libre && m.capacidad >= personas && m.capacidad <= capacidadMaxima(personas) ? actual : '';
     });
   }
 
@@ -426,11 +426,11 @@ export default function ReservaModal() {
               <h3 className="text-lg">Tus datos</h3>
               <div>
                 <label htmlFor="rm-nombre" className="label">Nombre</label>
-                <input id="rm-nombre" required minLength={2} value={nombre} onChange={(e) => setNombre(e.target.value)} className="input" autoComplete="name" />
+                <input id="rm-nombre" required minLength={2} maxLength={80} value={nombre} onChange={(e) => setNombre(e.target.value)} className="input" autoComplete="name" />
               </div>
               <div>
                 <label htmlFor="rm-telefono" className="label">Teléfono</label>
-                <input id="rm-telefono" type="tel" required minLength={6} value={telefono} onChange={(e) => setTelefono(e.target.value)} className="input" autoComplete="tel" placeholder="11 5555 0123" />
+                <input id="rm-telefono" type="tel" required minLength={6} maxLength={30} pattern="[0-9+\(\)\s.\-]{6,30}" title="Solo números, espacios y + ( ) -" value={telefono} onChange={(e) => setTelefono(e.target.value)} className="input" autoComplete="tel" placeholder="11 5555 0123" />
               </div>
               <p className="text-sm text-tinta/70">
                 {mesaElegida ? `Mesa ${mesaElegida.numero_mesa}, elegida por vos.` : 'Te asignamos la mejor mesa libre.'} La reserva queda pendiente hasta que el local la confirme.

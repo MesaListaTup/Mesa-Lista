@@ -9,6 +9,13 @@ const PAD = 14;
 const TOP = 28; // franja del ventanal
 const BOTTOM = 34; // franja de la entrada
 
+// Capacidad máxima de mesa que se le ofrece a un grupo: se redondea al siguiente número par
+// (1-2 personas -> mesa de 2, 3-4 -> mesa de 4, 5-6 -> mesa de 6...). Así 2 personas no ocupan una mesa de 10.
+// Tiene que coincidir con capacidad_maxima_mesa() de supabase/v7_reservas_reglas.sql.
+export function capacidadMaxima(personas) {
+  return personas + (personas % 2);
+}
+
 function geometria(capacidad, cx, cy) {
   const n = Math.max(1, Math.min(capacidad, 12));
 
@@ -46,22 +53,23 @@ const ESTILO = {
     numero: 'fill-white',
     texto: 'fill-tomate',
   },
+  // Mesa que no corresponde al grupo (muy chica o desproporcionadamente grande): se ve en el plano pero no se puede elegir
+  noApta: {
+    cuerpo: 'fill-white stroke-tinta/30 [stroke-dasharray:4_3]',
+    silla: 'fill-white stroke-tinta/25',
+    numero: 'fill-tinta/40',
+    texto: 'fill-tinta/50',
+  },
   ocupada: {
     cuerpo: 'fill-tinta/15 stroke-tinta/30',
     silla: 'fill-tinta/10 stroke-tinta/25',
     numero: 'fill-tinta/40',
     texto: 'fill-tinta/50',
   },
-  chica: {
-    cuerpo: 'fill-white stroke-tinta/30 [stroke-dasharray:4_3]',
-    silla: 'fill-white stroke-tinta/25',
-    numero: 'fill-tinta/40',
-    texto: 'fill-tinta/50',
-  },
 };
 
-const CAPTION = { libre: (m) => `Para ${m.capacidad}`, elegida: () => 'Tu mesa', ocupada: () => 'Ocupada', chica: () => 'No entra' };
-const DESCRIPCION = { libre: 'libre', elegida: 'elegida', ocupada: 'ocupada en ese horario', chica: 'muy chica para tu grupo' };
+const CAPTION = { libre: (m) => `Para ${m.capacidad}`, elegida: () => 'Tu mesa', ocupada: () => 'Ocupada', chica: () => 'No entra', grande: () => 'Muy grande' };
+const DESCRIPCION = { libre: 'libre', elegida: 'elegida', ocupada: 'ocupada en ese horario', chica: 'muy chica para tu grupo', grande: 'demasiado grande para tu grupo' };
 
 export default function PlanoMesas({ mesas, personas, seleccionada, onSelect }) {
   const cols = Math.min(MAX_COLS, Math.max(1, mesas.length));
@@ -102,9 +110,17 @@ export default function PlanoMesas({ mesas, personas, seleccionada, onSelect }) 
           const cy = arriba + 46;
 
           const sel = seleccionada === m.id;
-          const estado = sel ? 'elegida' : !m.libre ? 'ocupada' : m.capacidad < personas ? 'chica' : 'libre';
+          const estado = sel
+            ? 'elegida'
+            : m.capacidad < personas
+              ? 'chica'
+              : m.capacidad > capacidadMaxima(personas)
+                ? 'grande'
+                : !m.libre
+                  ? 'ocupada'
+                  : 'libre';
           const activa = estado === 'libre' || estado === 'elegida';
-          const e = ESTILO[estado];
+          const e = ESTILO[estado === 'chica' || estado === 'grande' ? 'noApta' : estado];
           const g = geometria(m.capacidad, cx, cy);
           const alternar = () => activa && onSelect(sel ? '' : m.id);
 
@@ -153,7 +169,7 @@ export default function PlanoMesas({ mesas, personas, seleccionada, onSelect }) 
         <li><span className="mr-1.5 inline-block h-3 w-3 rounded-full border-2 border-tinta bg-white align-[-2px]" />Libre</li>
         <li><span className="mr-1.5 inline-block h-3 w-3 rounded-full border-2 border-tomate bg-tomate align-[-2px]" />Elegida</li>
         <li><span className="mr-1.5 inline-block h-3 w-3 rounded-full border-2 border-tinta/30 bg-tinta/15 align-[-2px]" />Ocupada</li>
-        <li><span className="mr-1.5 inline-block h-3 w-3 rounded-full border-2 border-dashed border-tinta/30 bg-white align-[-2px]" />No entra tu grupo</li>
+        <li><span className="mr-1.5 inline-block h-3 w-3 rounded-full border-2 border-dashed border-tinta/30 bg-white align-[-2px]" />No corresponde a tu grupo</li>
       </ul>
     </div>
   );
