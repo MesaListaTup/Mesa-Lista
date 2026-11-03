@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { BUCKET, FOTO_POR_DEFECTO } from '@/lib/desarrolladores';
@@ -38,18 +38,29 @@ async function prepararFoto(archivo) {
   );
 }
 
-function Tarjeta({ d }) {
+// Tarjeta de un desarrollador. Sin "d" funciona como formulario para agregar uno nuevo.
+function Tarjeta({ d = null, siguienteOrden = 1, onListo }) {
   const supabase = createClient();
   const router = useRouter();
+  const nuevo = d === null;
+  const tarjetaRef = useRef(null);
 
-  const [nombre, setNombre] = useState(d.nombre);
-  const [descripcion, setDescripcion] = useState(d.descripcion ?? '');
+  const [idNuevo] = useState(() => (nuevo ? crypto.randomUUID() : null)); // id propio para poder subir la foto antes de crear la fila
+  const id = nuevo ? idNuevo : d.id;
+
+  const [nombre, setNombre] = useState(d?.nombre ?? '');
+  const [descripcion, setDescripcion] = useState(d?.descripcion ?? '');
   const [archivo, setArchivo] = useState(null); // foto nueva elegida, todavía sin subir
   const [preview, setPreview] = useState(null);
   const [quitar, setQuitar] = useState(false); // volver a la foto por defecto
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState('');
   const [guardado, setGuardado] = useState(false);
+
+  // Al abrir el formulario de alta, se lleva a la vista
+  useEffect(() => {
+    if (nuevo) tarjetaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [nuevo]);
 
   useEffect(() => {
     if (!archivo) {
@@ -61,11 +72,12 @@ function Tarjeta({ d }) {
     return () => URL.revokeObjectURL(url);
   }, [archivo]);
 
-  const fotoGuardada = quitar ? null : d.foto_url;
+  const fotoGuardada = quitar ? null : d?.foto_url ?? null;
   const mostrada = preview || fotoGuardada || FOTO_POR_DEFECTO;
   const tieneFoto = Boolean(preview || fotoGuardada);
-  const hayCambios =
-    archivo !== null || quitar || nombre.trim() !== d.nombre || descripcion.trim() !== (d.descripcion ?? '');
+  const hayCambios = nuevo
+    ? nombre.trim().length >= 2
+    : archivo !== null || quitar || nombre.trim() !== d.nombre || descripcion.trim() !== (d.descripcion ?? '');
 
   function elegirArchivo(e) {
     const f = e.target.files?.[0];
@@ -82,12 +94,12 @@ function Tarjeta({ d }) {
   function quitarFoto() {
     setGuardado(false);
     if (archivo) setArchivo(null); // descarta la foto nueva
-    else if (d.foto_url) setQuitar(true); // marca la foto guardada para borrar
+    else if (d?.foto_url) setQuitar(true); // marca la foto guardada para borrar
   }
 
   function deshacer() {
-    setNombre(d.nombre);
-    setDescripcion(d.descripcion ?? '');
+    setNombre(d?.nombre ?? '');
+    setDescripcion(d?.descripcion ?? '');
     setArchivo(null);
     setQuitar(false);
     setError('');
@@ -100,8 +112,8 @@ function Tarjeta({ d }) {
     setError('');
     setGuardado(false);
 
-    let fotoUrl = d.foto_url;
-    let fotoPath = d.foto_path;
+    let fotoUrl = d?.foto_url ?? null;
+    let fotoPath = d?.foto_path ?? null;
     let rutaNueva = null;
 
     try {
@@ -109,7 +121,7 @@ function Tarjeta({ d }) {
         const blob = await prepararFoto(archivo).catch(() => {
           throw new Error('No se pudo leer la imagen. Probá con otra en formato JPG, PNG o WEBP.');
         });
-        rutaNueva = `${d.id}/${Date.now()}.jpg`; // nombre único: no hay problemas de caché al reemplazar
+        rutaNueva = `${id}/${Date.now()}.jpg`; // nombre único: no hay problemas de caché al reemplazar
         const { error: errorSubida } = await supabase.storage
           .from(BUCKET)
           .upload(rutaNueva, blob, { contentType: 'image/jpeg', cacheControl: '31536000' });
@@ -121,28 +133,33 @@ function Tarjeta({ d }) {
         fotoPath = null;
       }
 
-      const { error: errorUpdate } = await supabase
-        .from('desarrolladores')
-        .update({
-          nombre: nombre.trim(),
-          descripcion: descripcion.trim() || null,
-          foto_url: fotoUrl,
-          foto_path: fotoPath,
-        })
-        .eq('id', d.id);
+      const datos = {
+        nombre: nombre.trim(),
+        descripcion: descripcion.trim() || null,
+        foto_url: fotoUrl,
+        foto_path: fotoPath,
+      };
 
-      if (errorUpdate) {
+      const { error: errorGuardar } = nuevo
+        ? await supabase.from('desarrolladores').insert({ id, ...datos, orden: siguienteOrden })
+        : await supabase.from('desarrolladores').update(datos).eq('id', id);
+
+      if (errorGuardar) {
         if (rutaNueva) await supabase.storage.from(BUCKET).remove([rutaNueva]); // no dejar fotos huérfanas
-        throw errorUpdate;
+        throw errorGuardar;
       }
 
       // La foto anterior ya no se usa: se borra del bucket
-      if ((archivo || quitar) && d.foto_path) await supabase.storage.from(BUCKET).remove([d.foto_path]);
+      if (!nuevo && (archivo || quitar) && d.foto_path) await supabase.storage.from(BUCKET).remove([d.foto_path]);
 
+      router.refresh();
+      if (nuevo) {
+        onListo?.(); // cierra el formulario: la persona ya aparece en la lista
+        return;
+      }
       setArchivo(null);
       setQuitar(false);
       setGuardado(true);
-      router.refresh();
     } catch (err) {
       setError(err?.message || 'No se pudo guardar. Probá de nuevo.');
     } finally {
@@ -150,11 +167,26 @@ function Tarjeta({ d }) {
     }
   }
 
+  async function eliminar() {
+    if (!confirm(`¿Eliminar a ${d.nombre} del equipo? Esta acción no se puede deshacer.`)) return;
+    setGuardando(true);
+    setError('');
+    const { error: errorBorrar } = await supabase.from('desarrolladores').delete().eq('id', d.id);
+    if (errorBorrar) {
+      setGuardando(false);
+      return setError(errorBorrar.message);
+    }
+    if (d.foto_path) await supabase.storage.from(BUCKET).remove([d.foto_path]);
+    router.refresh();
+  }
+
   return (
-    <form onSubmit={guardar} className="panel flex flex-col gap-4">
+    <form ref={tarjetaRef} onSubmit={guardar} className={`panel flex flex-col gap-4 ${nuevo ? 'ring-2 ring-tinta/30' : ''}`}>
+      {nuevo && <h2 className="font-display text-xl">Nuevo desarrollador</h2>}
+
       <div className="aspect-[4/5] w-full overflow-hidden rounded-lg border border-tinta/10 bg-white">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={mostrada} alt={tieneFoto ? `Foto de ${d.nombre}` : 'Foto por defecto'} className="h-full w-full object-cover" />
+        <img src={mostrada} alt={tieneFoto ? 'Foto elegida' : 'Foto por defecto'} className="h-full w-full object-cover" />
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -172,12 +204,13 @@ function Tarjeta({ d }) {
       {archivo && <p className="-mt-2 text-xs text-tinta/60">La foto nueva se recorta al centro y se sube al guardar.</p>}
 
       <div>
-        <label htmlFor={`dev-${d.id}-nombre`} className="label">Nombre</label>
+        <label htmlFor={`dev-${id}-nombre`} className="label">Nombre</label>
         <input
-          id={`dev-${d.id}-nombre`}
+          id={`dev-${id}-nombre`}
           className="input"
           required
           minLength={2}
+          autoFocus={nuevo}
           value={nombre}
           onChange={(e) => {
             setNombre(e.target.value);
@@ -186,9 +219,9 @@ function Tarjeta({ d }) {
         />
       </div>
       <div>
-        <label htmlFor={`dev-${d.id}-desc`} className="label">Descripción</label>
+        <label htmlFor={`dev-${id}-desc`} className="label">Descripción</label>
         <textarea
-          id={`dev-${d.id}-desc`}
+          id={`dev-${id}-desc`}
           className="input min-h-28"
           maxLength={400}
           value={descripcion}
@@ -204,25 +237,55 @@ function Tarjeta({ d }) {
 
       <div className="mt-auto flex gap-2">
         <button className="btn btn-dark flex-1" disabled={!hayCambios || guardando || nombre.trim().length < 2}>
-          {guardando ? 'Guardando…' : 'Guardar cambios'}
+          {guardando ? 'Guardando…' : nuevo ? 'Agregar al equipo' : 'Guardar cambios'}
         </button>
-        {hayCambios && !guardando && (
-          <button type="button" onClick={deshacer} className="btn btn-ghost">Deshacer</button>
+        {nuevo ? (
+          <button type="button" onClick={onListo} disabled={guardando} className="btn btn-ghost">Cancelar</button>
+        ) : (
+          hayCambios && !guardando && <button type="button" onClick={deshacer} className="btn btn-ghost">Deshacer</button>
         )}
       </div>
+
+      {!nuevo && (
+        <button type="button" onClick={eliminar} disabled={guardando} className="self-start text-xs text-tomate underline underline-offset-2 hover:no-underline disabled:opacity-50">
+          Eliminar del equipo
+        </button>
+      )}
     </form>
   );
 }
 
 export default function DesarrolladoresClient({ desarrolladores }) {
-  if (desarrolladores.length === 0) {
-    return <p className="panel text-sm text-tinta/70">No hay desarrolladores cargados. Ejecutá el SQL de la migración V7 para crear los iniciales.</p>;
-  }
+  const [agregando, setAgregando] = useState(false);
+  // La persona nueva aparece al final de la página pública
+  const siguienteOrden = desarrolladores.reduce((max, d) => Math.max(max, d.orden ?? 0), 0) + 1;
+
   return (
-    <div className="grid gap-5 sm:grid-cols-2 2xl:grid-cols-4">
-      {desarrolladores.map((d) => (
-        <Tarjeta key={d.id} d={d} />
-      ))}
+    <div className="space-y-5">
+      {desarrolladores.length === 0 && !agregando && (
+        <p className="text-sm text-tinta/70">Todavía no hay desarrolladores cargados. Agregá el primero.</p>
+      )}
+
+      <div className="grid gap-5 sm:grid-cols-2 2xl:grid-cols-4">
+        {desarrolladores.map((d) => (
+          <Tarjeta key={d.id} d={d} />
+        ))}
+
+        {agregando ? (
+          <Tarjeta key="nuevo" siguienteOrden={siguienteOrden} onListo={() => setAgregando(false)} />
+        ) : (
+          <button
+            type="button"
+            onClick={() => setAgregando(true)}
+            className="flex min-h-64 flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-tinta/25 p-6 text-tinta/70 transition-colors hover:border-tinta hover:text-tinta"
+          >
+            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            <span className="text-sm font-medium">Agregar desarrollador</span>
+          </button>
+        )}
+      </div>
     </div>
   );
 }
