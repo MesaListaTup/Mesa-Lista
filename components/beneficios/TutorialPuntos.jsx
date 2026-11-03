@@ -31,7 +31,7 @@ export default function TutorialPuntos() {
         {hayVideo && (
           <Reveal delay={100}>
             {idYT ? (
-              <VideoYoutube id={idYT} titulo={titulo} />
+              <VideoYoutube id={idYT} titulo={titulo} poster={poster} />
             ) : (
               <video
                 controls
