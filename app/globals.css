@@ -7,7 +7,7 @@
   /* Paleta de la landing (canales RGB para que funcione bg-tinta/10, etc.) */
   :root {
     --papel: 251 250 246;
-    --tinta: 21 35 59;
+    --tinta: 28 29 33;
     --tomate: 229 64 43;
     --sifon: 207 232 228;
     --limon: 242 214 75;
@@ -82,8 +82,8 @@
   .gingham {
     background-color: #fff;
     background-image:
-      linear-gradient(90deg, rgba(21, 35, 59, 0.2) 50%, transparent 50%),
-      linear-gradient(rgba(21, 35, 59, 0.2) 50%, transparent 50%);
+      linear-gradient(90deg, rgba(28, 29, 33, 0.2) 50%, transparent 50%),
+      linear-gradient(rgba(28, 29, 33, 0.2) 50%, transparent 50%);
     background-size: 56px 56px;
   }
 
@@ -96,7 +96,7 @@
   }
 
   .btn-dark {
-    @apply bg-tinta text-white hover:bg-[#0d1626];
+    @apply bg-tinta text-white hover:bg-black;
   }
 
   .btn-ghost {

@@ -58,7 +58,8 @@ export default function MesasGrid({ mesas }) {
   const mesasPlano = editando ? orden : mesas;
   const hayCambios = editando && orden.some((m, i) => m.id !== mesas[i]?.id);
   const sel = editando ? null : mesas.find((m) => m.id === seleccionadaId) ?? null;
-  const conteo = (v) => mesas.filter((m) => m.vista === v).length;
+  const totalLugares = mesas.reduce((t, m) => t + m.capacidad, 0);
+  const diaHoy = new Date().toLocaleDateString('es-AR', { weekday: 'long', timeZone: 'America/Argentina/Buenos_Aires' });
 
   // Cuando el servidor devuelve el orden nuevo, se sale del modo edición (evita un parpadeo con el orden viejo)
   useEffect(() => {
@@ -132,13 +133,6 @@ export default function MesasGrid({ mesas }) {
       <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
           <h1 className="font-display text-3xl">Mesas</h1>
-          <div className="flex flex-wrap gap-1.5 text-sm">
-            {['libre', 'reservada', 'ocupada', 'inactiva'].map((v) => (
-              <span key={v} className="flex items-center gap-2 rounded-md border border-tinta/10 bg-white px-2.5 py-1">
-                <Badge estado={v} /> <strong className="tabular-nums">{conteo(v)}</strong>
-              </span>
-            ))}
-          </div>
         </div>
 
         <form onSubmit={agregar} className="flex items-center gap-2">
@@ -179,13 +173,18 @@ export default function MesasGrid({ mesas }) {
                   </>
                 ) : (
                   <>
-                    <p className="text-sm font-semibold text-tinta/70">Plano del salón</p>
+                    <div>
+                      <p className="text-base font-semibold leading-tight">Plano del salón</p>
+                      <p className="text-xs text-tinta/55" suppressHydrationWarning>
+                        {mesas.length} {mesas.length === 1 ? 'mesa' : 'mesas'} · {totalLugares} lugares · {diaHoy}, hoy
+                      </p>
+                    </div>
                     <button
                       onClick={empezarEdicion}
                       disabled={mesas.length < 2}
                       title="Editar plano"
                       aria-label="Editar la posición de las mesas en el plano"
-                      className="btn btn-ghost h-9 w-9 !p-0"
+                      className="btn btn-ghost h-10 w-10 !p-0"
                     >
                       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <path d="M12 20h9" />

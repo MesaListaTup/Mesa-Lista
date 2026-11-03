@@ -348,7 +348,7 @@ export default function ReservaModal() {
                   <h3 className="mb-2 text-lg capitalize">Otros horarios el {formatFecha(fecha)}</h3>
                   <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
                     {mismoDia.map((h) => (
-                      <button key={h} type="button" onClick={() => entrarAlPlano(fecha, h)} className="rounded-md bg-tinta py-2.5 text-center text-white hover:bg-[#0d1626]">
+                      <button key={h} type="button" onClick={() => entrarAlPlano(fecha, h)} className="rounded-md bg-tinta py-2.5 text-center text-white hover:bg-black">
                         {h}
                       </button>
                     ))}
@@ -370,7 +370,7 @@ export default function ReservaModal() {
                       <p className="mb-2 capitalize text-tinta/80">{formatFecha(d.fecha)}</p>
                       <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
                         {d.horas.map((h) => (
-                          <button key={h} type="button" onClick={() => entrarAlPlano(d.fecha, h)} className="rounded-md bg-tinta py-2.5 text-center text-white hover:bg-[#0d1626]">
+                          <button key={h} type="button" onClick={() => entrarAlPlano(d.fecha, h)} className="rounded-md bg-tinta py-2.5 text-center text-white hover:bg-black">
                             {h}
                           </button>
                         ))}

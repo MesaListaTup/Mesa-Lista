@@ -2,8 +2,8 @@
 
 import { useRef, useState } from 'react';
 
-// Plano del salón para el panel del local. Mismo dibujo que ve el cliente, pero cada mesa muestra
-// su estado real y, si tiene reservas hoy, un número encima con la cantidad.
+// Plano del salón para el panel del local. Mismo estilo minimalista que ve el cliente, pero cada mesa muestra
+// su estado real y, si tiene reservas hoy, un número al costado con la cantidad.
 // En modo edición las mesas se arrastran: soltar una sobre otra intercambia sus lugares.
 const CELDA_W = 110;
 const CELDA_H = 112;
@@ -15,14 +15,12 @@ const BOTTOM = 34; // franja de la entrada
 function geometria(capacidad, cx, cy) {
   const n = Math.max(1, Math.min(capacidad, 12));
 
-  // 1 o 2 personas: mesa redonda
+  // 1 o 2 personas: mesa redonda con las sillas a los costados
   if (n <= 2) {
     const r = 20;
-    const inicio = n === 2 ? 0 : -Math.PI / 2;
-    const sillas = Array.from({ length: n }, (_, i) => {
-      const a = inicio + (i * 2 * Math.PI) / n;
-      return { x: cx + Math.cos(a) * (r + 10), y: cy + Math.sin(a) * (r + 10) };
-    });
+    const lado = r + 9;
+    const sillas = [{ x: cx - lado, y: cy, w: 6, h: 14 }];
+    if (n === 2) sillas.push({ x: cx + lado, y: cy, w: 6, h: 14 });
     return { forma: 'redonda', r, sillas };
   }
 
@@ -31,9 +29,10 @@ function geometria(capacidad, cx, cy) {
   const abajo = n - arriba;
   const w = Math.min(CELDA_W - 14, Math.max(44, arriba * 22));
   const h = 36;
+  const ancho = Math.max(8, Math.min(14, w / arriba - 6));
   const fila = (cant, y) =>
-    Array.from({ length: cant }, (_, j) => ({ x: cx - w / 2 + ((j + 0.5) * w) / cant, y }));
-  return { forma: 'rect', w, h, sillas: [...fila(arriba, cy - h / 2 - 9), ...fila(abajo, cy + h / 2 + 9)] };
+    Array.from({ length: cant }, (_, j) => ({ x: cx - w / 2 + ((j + 0.5) * w) / cant, y, w: ancho, h: 6 }));
+  return { forma: 'rect', w, h, sillas: [...fila(arriba, cy - h / 2 - 8), ...fila(abajo, cy + h / 2 + 8)] };
 }
 
 // Posición de cada lugar (slot) del plano
@@ -53,32 +52,40 @@ function armarLayout(n) {
   return { cols, filas, ancho, alto, centro: ancho / 2, slot };
 }
 
+// Diseño minimalista: solo grises y un toque de ocre para "reservada".
+//   libre     -> blanca, borde fino
+//   reservada -> crema con la hora de la reserva
+//   ocupada   -> negra ("en uso")
+//   inactiva  -> rayada con borde punteado
 const ESTILO = {
   libre: {
-    cuerpo: 'fill-white stroke-tinta group-hover:fill-sifon',
-    silla: 'fill-sifon stroke-tinta',
+    cuerpo: 'fill-white stroke-tinta/15 group-hover:stroke-tinta/40',
+    silla: 'fill-tinta/15',
     numero: 'fill-tinta',
-    texto: 'fill-tinta/70',
+    texto: 'fill-tinta/45',
   },
   reservada: {
-    cuerpo: 'fill-limon/60 stroke-tinta group-hover:fill-limon',
-    silla: 'fill-limon/60 stroke-tinta',
+    cuerpo: 'fill-limon/35 stroke-limon group-hover:fill-limon/50',
+    silla: 'fill-limon',
     numero: 'fill-tinta',
     texto: 'fill-tinta',
   },
   ocupada: {
-    cuerpo: 'fill-tomate/20 stroke-tomate group-hover:fill-tomate/30',
-    silla: 'fill-tomate/20 stroke-tomate',
-    numero: 'fill-tomate',
-    texto: 'fill-tomate',
+    cuerpo: 'fill-tinta stroke-tinta',
+    silla: 'fill-tinta/70',
+    numero: 'fill-white',
+    texto: 'fill-tinta',
   },
   inactiva: {
-    cuerpo: 'fill-tinta/10 stroke-tinta/30 [stroke-dasharray:4_3]',
-    silla: 'fill-tinta/5 stroke-tinta/25',
-    numero: 'fill-tinta/40',
-    texto: 'fill-tinta/50',
+    cuerpo: 'fill-transparent stroke-tinta/30 [stroke-dasharray:4_3]',
+    silla: 'fill-transparent stroke-tinta/25 [stroke-dasharray:2_2]',
+    numero: 'fill-tinta/30',
+    texto: 'fill-tinta/40',
   },
 };
+
+const SOMBRA_SUAVE = { filter: 'drop-shadow(0 1px 2px rgba(0,0,0,.12))' };
+const SOMBRA_MARCO = { filter: 'drop-shadow(0 4px 10px rgba(0,0,0,.12))' };
 
 const ETIQUETA = { libre: 'libre', reservada: 'reservada', ocupada: 'ocupada', inactiva: 'inactiva' };
 
@@ -151,22 +158,34 @@ export default function PlanoAdmin({ mesas, seleccionada, onSelect, editando = f
     const e = ESTILO[m.vista];
     const g = geometria(m.capacidad, cx, cy);
     const cant = m.hoy.length;
-    const caption =
-      m.vista === 'reservada' ? `Reserva ${m.horaReserva}` : m.vista === 'libre' ? 'Libre' : m.vista === 'ocupada' ? 'Ocupada' : 'Inactiva';
     const alternar = () => !editando && onSelect(sel ? null : m.id);
+    const textoPie =
+      m.vista === 'libre' ? `${m.capacidad} ${m.capacidad === 1 ? 'lugar' : 'lugares'}` : m.vista === 'ocupada' ? 'En uso' : 'Inactiva';
+
+    // Forma de la mesa (la misma para el cuerpo y para el rayado de las inactivas)
+    const forma = (props) =>
+      g.forma === 'redonda' ? (
+        <circle cx={cx} cy={cy} r={g.r} {...props} />
+      ) : (
+        <rect x={cx - g.w / 2} y={cy - g.h / 2} width={g.w} height={g.h} rx="9" {...props} />
+      );
+
+    // Posición del globito con la cantidad de reservas de hoy: esquina superior derecha de la mesa
+    const bx = Math.min(cx + (g.forma === 'redonda' ? g.r + 6 : g.w / 2 + 6), cx + 44);
+    const by = g.forma === 'redonda' ? cy - g.r - 3 : cy - g.h / 2 - 20;
 
     return (
       <g
         key={m.id}
         transform={enMovimiento ? `translate(${drag.px + drag.ox - cx} ${drag.py + drag.oy - cy})` : undefined}
-        style={enMovimiento ? { filter: 'drop-shadow(0 6px 6px rgba(21,35,59,.35))' } : undefined}
+        style={enMovimiento ? { filter: 'drop-shadow(0 8px 8px rgba(0,0,0,.25))' } : undefined}
         role="button"
         tabIndex={0}
         aria-pressed={editando ? undefined : sel}
         aria-label={
           editando
             ? `Mesa ${m.numero_mesa}, lugar ${posicionLista + 1} de ${mesas.length}. Usá las flechas del teclado para moverla.`
-            : `Mesa ${m.numero_mesa}, para ${m.capacidad} personas, ${ETIQUETA[m.vista]}${cant ? `, ${cant} ${cant === 1 ? 'reserva' : 'reservas'} hoy` : ''
+            : `Mesa ${m.numero_mesa}, para ${m.capacidad} personas, ${ETIQUETA[m.vista]}${m.vista === 'reservada' && m.horaReserva ? ` a las ${m.horaReserva}` : ''}${cant ? `, ${cant} ${cant === 1 ? 'reserva' : 'reservas'} hoy` : ''
             }`
         }
         onClick={alternar}
@@ -189,39 +208,51 @@ export default function PlanoAdmin({ mesas, seleccionada, onSelect, editando = f
       >
         <title>{`Mesa ${m.numero_mesa} · para ${m.capacidad} · ${ETIQUETA[m.vista]}`}</title>
 
-        {/* Marco suave de la mesa seleccionada (también es la zona de click) */}
+        {/* Marco de la mesa seleccionada (también es la zona de click) */}
         <rect
           x={cx - CELDA_W / 2 + 3}
           y={arriba}
           width={CELDA_W - 6}
           height={CELDA_H - 4}
-          rx="12"
-          strokeWidth="1.5"
-          className={sel ? 'fill-tinta/5 stroke-tinta/50' : 'fill-transparent stroke-transparent'}
+          rx="14"
+          strokeWidth="2"
+          style={sel ? SOMBRA_MARCO : undefined}
+          className={sel ? 'fill-white stroke-tinta' : 'fill-transparent stroke-transparent'}
         />
 
         {g.sillas.map((s, k) => (
-          <circle key={k} cx={s.x} cy={s.y} r="5.5" strokeWidth="1.2" className={e.silla} />
+          <rect key={k} x={s.x - s.w / 2} y={s.y - s.h / 2} width={s.w} height={s.h} rx={Math.min(s.w, s.h) / 2} strokeWidth="1" className={e.silla} />
         ))}
-        {g.forma === 'redonda' ? (
-          <circle cx={cx} cy={cy} r={g.r} strokeWidth="2" className={e.cuerpo} />
-        ) : (
-          <rect x={cx - g.w / 2} y={cy - g.h / 2} width={g.w} height={g.h} rx="8" strokeWidth="2" className={e.cuerpo} />
-        )}
 
-        <text x={cx} y={cy} dy=".35em" textAnchor="middle" fontSize="17" className={`font-display ${e.numero}`}>
+        {forma({ strokeWidth: m.vista === 'inactiva' ? 1.5 : 1.25, className: `transition-colors ${e.cuerpo}`, style: m.vista === 'libre' || m.vista === 'reservada' ? SOMBRA_SUAVE : undefined })}
+        {m.vista === 'inactiva' && forma({ fill: 'url(#plano-admin-rayas)', pointerEvents: 'none' })}
+
+        <text x={cx} y={cy} dy=".35em" textAnchor="middle" fontSize="19" className={`font-display ${e.numero}`}>
           {m.numero_mesa}
         </text>
-        <text x={cx} y={arriba + 104} textAnchor="middle" fontSize="11" fontWeight="600" className={e.texto}>
-          {caption}
-        </text>
 
-        {/* Cantidad de reservas de hoy, por encima de la mesa */}
+        {/* Pie: hora de la reserva, o el estado / capacidad */}
+        {m.vista === 'reservada' && m.horaReserva ? (
+          <g>
+            <rect x={cx - 25} y={arriba + 88} width="50" height="16" rx="8" className="fill-tinta" />
+            <circle cx={cx - 15} cy={arriba + 96} r="4.2" fill="none" strokeWidth="1.3" className="stroke-white" />
+            <path d={`M ${cx - 15} ${arriba + 93.8} V ${arriba + 96} L ${cx - 13.2} ${arriba + 97.2}`} fill="none" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" className="stroke-white" />
+            <text x={cx - 8} y={arriba + 96} dy=".35em" fontSize="10.5" fontWeight="600" className="fill-white">
+              {m.horaReserva}
+            </text>
+          </g>
+        ) : (
+          <text x={cx} y={arriba + 99} textAnchor="middle" fontSize="11" fontWeight={m.vista === 'ocupada' ? 700 : 500} className={e.texto}>
+            {textoPie}
+          </text>
+        )}
+
+        {/* Cantidad de reservas de hoy, en la esquina de la mesa */}
         {cant > 0 && !editando && (
           <g>
             <title>{`${cant} ${cant === 1 ? 'reserva' : 'reservas'} para hoy`}</title>
-            <circle cx={cx} cy={arriba + 11} r="9" strokeWidth="1.5" className="fill-tinta stroke-white" />
-            <text x={cx} y={arriba + 11} dy=".35em" textAnchor="middle" fontSize="11" fontWeight="700" className="fill-white">
+            <circle cx={bx} cy={by} r="9" strokeWidth="2" className="fill-tinta stroke-white" />
+            <text x={bx} y={by} dy=".35em" textAnchor="middle" fontSize="11" fontWeight="700" className="fill-white">
               {cant}
             </text>
           </g>
@@ -231,9 +262,37 @@ export default function PlanoAdmin({ mesas, seleccionada, onSelect, editando = f
   };
 
   const { ancho, alto, centro } = L;
+  const reservasHoy = mesas.reduce((t, m) => t + m.hoy.length, 0);
+  const contar = (v) => mesas.filter((m) => m.vista === v).length;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
+      {/* Resumen: cuántas mesas hay en cada estado */}
+      <ul className="mb-3 flex shrink-0 flex-wrap gap-1.5 text-xs text-tinta/70">
+        <li className="flex items-center gap-2 rounded-full border border-tinta/10 bg-white px-3 py-1">
+          <span className="h-3 w-3 rounded-full border border-tinta/30 bg-white" />
+          Libres <strong className="tabular-nums text-tinta">{contar('libre')}</strong>
+        </li>
+        <li className="flex items-center gap-2 rounded-full border border-tinta/10 bg-white px-3 py-1">
+          <span className="h-3 w-3 rounded-full border border-limon bg-limon/50" />
+          Reservadas <strong className="tabular-nums text-tinta">{contar('reservada')}</strong>
+        </li>
+        <li className="flex items-center gap-2 rounded-full border border-tinta/10 bg-white px-3 py-1">
+          <span className="h-3 w-3 rounded-full bg-tinta" />
+          Ocupadas <strong className="tabular-nums text-tinta">{contar('ocupada')}</strong>
+        </li>
+        <li className="flex items-center gap-2 rounded-full border border-tinta/10 bg-white px-3 py-1">
+          <span className="h-3 w-3 rounded-full border border-dashed border-tinta/40" />
+          Inactivas <strong className="tabular-nums text-tinta">{contar('inactiva')}</strong>
+        </li>
+        <li className="flex items-center gap-2 rounded-full border border-tinta/10 bg-white px-3 py-1">
+          <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-tinta px-1 text-[10px] font-bold leading-none text-white">
+            {reservasHoy}
+          </span>
+          Reservas de hoy
+        </li>
+      </ul>
+
       {/* En pantallas medianas y grandes el plano ocupa todo el alto libre y se escala para que entre */}
       <div className="md:relative md:min-h-0 md:flex-1">
         <svg
@@ -247,24 +306,30 @@ export default function PlanoAdmin({ mesas, seleccionada, onSelect, editando = f
           onPointerUp={soltar}
           onPointerCancel={() => setDrag(null)}
         >
-          {/* Salón */}
-          <rect x="3" y="3" width={ancho - 6} height={alto - 6} rx="10" className="fill-papel" />
-          <path
-            d={`M ${centro + 30} ${alto - 3} H ${ancho - 3} V 3 H 3 V ${alto - 3} H ${centro - 30}`}
-            fill="none"
-            strokeWidth="3"
-            strokeLinejoin="round"
-            className="stroke-tinta"
-          />
+          <defs>
+            <pattern id="plano-admin-puntos" width="14" height="14" patternUnits="userSpaceOnUse">
+              <circle cx="7" cy="7" r="0.7" className="fill-tinta/15" />
+            </pattern>
+            <pattern id="plano-admin-rayas" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <line x1="0" y1="0" x2="0" y2="6" strokeWidth="1.2" className="stroke-tinta/15" />
+            </pattern>
+          </defs>
+
+          {/* Salón: fondo con puntitos y borde fino */}
+          <rect x="1" y="1" width={ancho - 2} height={alto - 2} rx="14" className="fill-papel" />
+          <rect x="1" y="1" width={ancho - 2} height={alto - 2} rx="14" fill="url(#plano-admin-puntos)" />
+          <rect x="1" y="1" width={ancho - 2} height={alto - 2} rx="14" fill="none" strokeWidth="1" className="stroke-tinta/10" />
+
           {/* Ventanal */}
-          <rect x={ancho * 0.2} y="1" width={ancho * 0.6} height="5" rx="2" strokeWidth="1.5" className="fill-sifon stroke-tinta" />
-          <text x={centro} y={PAD + 16} textAnchor="middle" fontSize="10" className="fill-tinta/50">
-            Ventanal
+          <rect x={ancho * 0.22} y="1" width={ancho * 0.56} height="4" rx="2" className="fill-tinta/25" />
+          <text x={centro + 1.5} y={PAD + 14} textAnchor="middle" fontSize="8.5" fontWeight="500" letterSpacing="3" className="fill-tinta/40">
+            VENTANAL
           </text>
           {/* Entrada */}
-          <text x={centro} y={alto - 12} textAnchor="middle" fontSize="10" className="fill-tinta/50">
-            Entrada
+          <text x={centro + 1.5} y={alto - 16} textAnchor="middle" fontSize="8.5" fontWeight="500" letterSpacing="3" className="fill-tinta/40">
+            ENTRADA
           </text>
+          <rect x={centro - 30} y={alto - 5} width="60" height="4" rx="2" className="fill-tinta/25" />
 
           {/* Lugares: en modo edición se ven como casilleros; el de destino se resalta */}
           {editando &&
@@ -278,10 +343,10 @@ export default function PlanoAdmin({ mesas, seleccionada, onSelect, editando = f
                   y={s.arriba}
                   width={CELDA_W - 6}
                   height={CELDA_H - 4}
-                  rx="12"
+                  rx="14"
                   strokeWidth="1.5"
                   strokeDasharray="5 4"
-                  className={destino ? 'fill-sifon/60 stroke-tinta' : 'fill-tinta/5 stroke-tinta/30'}
+                  className={destino ? 'fill-tinta/10 stroke-tinta' : 'fill-tinta/[.03] stroke-tinta/20'}
                 />
               );
             })}
@@ -291,17 +356,6 @@ export default function PlanoAdmin({ mesas, seleccionada, onSelect, editando = f
           {arrastrada && dibujar(arrastrada, drag.desde, true)}
         </svg>
       </div>
-
-      <ul className="mt-2 flex shrink-0 flex-wrap gap-x-4 gap-y-1 text-xs text-tinta/70">
-        <li><span className="mr-1.5 inline-block h-3 w-3 rounded-full border-2 border-tinta bg-white align-[-2px]" />Libre</li>
-        <li><span className="mr-1.5 inline-block h-3 w-3 rounded-full border-2 border-tinta bg-limon/60 align-[-2px]" />Reservada</li>
-        <li><span className="mr-1.5 inline-block h-3 w-3 rounded-full border-2 border-tomate bg-tomate/20 align-[-2px]" />Ocupada</li>
-        <li><span className="mr-1.5 inline-block h-3 w-3 rounded-full border-2 border-dashed border-tinta/30 bg-tinta/10 align-[-2px]" />Inactiva</li>
-        <li className="flex items-center gap-1.5">
-          <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-tinta text-[10px] font-bold text-white">2</span>
-          Reservas de hoy
-        </li>
-      </ul>
     </div>
   );
 }
