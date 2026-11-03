@@ -159,7 +159,7 @@ function Usuario({ perfil }) {
       {!collapsed && (
         <div className="min-w-0 flex-1">
           <p className="truncate text-[12.5px] font-medium leading-tight">{nombre}</p>
-          <p className="truncate text-[11px] capitalize leading-tight text-papel/50">{perfil.rol}</p>
+          <p className="truncate text-[11px] leading-tight text-papel/50">{perfil.email}</p>
         </div>
       )}
       {salir}
