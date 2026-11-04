@@ -1,0 +1,139 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+
+  /* Paleta de la landing (canales RGB para que funcione bg-tinta/10, etc.) */
+  :root {
+    --papel: 251 250 246;
+    --tinta: 28 29 33;
+    --tomate: 229 64 43;
+    --sifon: 207 232 228;
+    --limon: 242 214 75;
+  }
+
+  /* Paleta del panel admin: grafito, blancos y negros.
+     "tomate" queda solo como rojo apagado para errores/acciones destructivas,
+     "sifon" y "limon" como verde/ocre suaves para estados (ok / aviso). */
+  .panel-theme {
+    --papel: 244 244 245;
+    --tinta: 28 29 33;
+    --tomate: 176 58 52;
+    --sifon: 217 229 222;
+    --limon: 232 222 170;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-papel text-tinta font-sans antialiased;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-tomate;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    * {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+}
+
+/* Sidebar del panel: la barra de scroll solo aparece mientras se scrollea */
+.sidebar-nav {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 9999px;
+  transition: background-color 0.45s ease;
+}
+
+.sidebar-nav.is-scrolling {
+  scrollbar-color: rgba(251, 250, 246, 0.2) transparent;
+}
+
+.sidebar-nav.is-scrolling::-webkit-scrollbar-thumb {
+  background-color: rgba(251, 250, 246, 0.2);
+}
+
+@layer components {
+
+  /* Mantel a cuadros: la identidad visual de la landing */
+  .gingham {
+    background-color: #fff;
+    background-image:
+      linear-gradient(90deg, rgba(28, 29, 33, 0.2) 50%, transparent 50%),
+      linear-gradient(rgba(28, 29, 33, 0.2) 50%, transparent 50%);
+    background-size: 56px 56px;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center rounded-md px-4 py-2.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply bg-tomate text-white hover:bg-[#c9331f];
+  }
+
+  .btn-dark {
+    @apply bg-tinta text-white hover:bg-black;
+  }
+
+  .btn-ghost {
+    @apply border border-tinta/20 bg-white text-tinta hover:bg-tinta/5;
+  }
+
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs;
+  }
+
+  .input {
+    @apply w-full rounded-md border border-tinta/25 bg-white px-3 py-2.5 text-sm text-tinta placeholder:text-tinta/40 focus:border-tinta focus:outline-none focus:ring-2 focus:ring-tinta/20;
+  }
+
+  .label {
+    @apply mb-1 block text-sm font-medium text-tinta;
+  }
+
+  .panel {
+    @apply rounded-lg border border-tinta/10 bg-white p-5;
+  }
+}
+
+/* Botones y foco dentro del panel: grafito en lugar del rojo de la landing */
+.panel-theme :focus-visible {
+  outline-color: rgb(var(--tinta));
+}
+
+.panel-theme .btn-primary {
+  background-color: rgb(var(--tinta));
+  color: #fff;
+}
+
+.panel-theme .btn-primary:hover {
+  background-color: #000;
+}
+
+.panel-theme .btn-dark:hover {
+  background-color: #000;
+}
