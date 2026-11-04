@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { formatPrecio } from '@/lib/utils';
+import { formatCodigo } from '@/lib/cupones';
 
 const CATEGORIAS = [
   { id: 'comida', titulo: 'Comida' },
@@ -21,10 +22,19 @@ export default function CajaClient({ productos, mesas }) {
   const [enviando, setEnviando] = useState(false);
   const [aviso, setAviso] = useState(''); // confirmación del último pedido registrado
 
-  const total = useMemo(
+  // Cupón de descuento del cliente
+  const [codigo, setCodigo] = useState('');
+  const [cupon, setCupon] = useState(null); // cupón válido aplicado al pedido
+  const [errorCupon, setErrorCupon] = useState('');
+  const [verificando, setVerificando] = useState(false);
+
+  const subtotal = useMemo(
     () => productos.reduce((acc, p) => acc + (carrito[p.id] ?? 0) * Number(p.precio), 0),
     [carrito, productos]
   );
+  // Mismo cálculo que hace la base de datos al registrar el pedido (ahí es donde se define el monto real)
+  const descuento = cupon ? Math.round(subtotal * Number(cupon.cupon_descuento)) / 100 : 0;
+  const total = subtotal - descuento;
   const lineas = productos.filter((p) => carrito[p.id] > 0);
 
   function cambiar(id, delta) {
@@ -38,6 +48,27 @@ export default function CajaClient({ productos, mesas }) {
     });
   }
 
+  async function verificarCupon(e) {
+    e.preventDefault();
+    setErrorCupon('');
+    setAviso('');
+    if (!codigo.trim()) return;
+    setVerificando(true);
+    const { data, error } = await supabase.rpc('consultar_cupon', { p_codigo: codigo });
+    setVerificando(false);
+    if (error) return setErrorCupon(error.message);
+    const c = data?.[0];
+    if (!c) return setErrorCupon('Ese código no existe. Revisá que esté bien escrito.');
+    if (c.cupon_estado !== 'activo') return setErrorCupon('Ese cupón ya fue utilizado.');
+    setCupon(c);
+    setCodigo('');
+  }
+
+  function quitarCupon() {
+    setCupon(null);
+    setErrorCupon('');
+  }
+
   async function registrar() {
     setError('');
     setAviso('');
@@ -48,12 +79,27 @@ export default function CajaClient({ productos, mesas }) {
       p_mesa_id: tipo === 'local' ? mesaId : null,
       p_tipo: tipo,
       p_items: lineas.map((p) => ({ producto_id: p.id, cantidad: carrito[p.id] })),
+      p_cupon: cupon?.cupon_codigo ?? null,
     });
     setEnviando(false);
-    if (error) return setError(error.message);
-    setAviso(`Pedido registrado: ${destino} · ${formatPrecio(total)}.`);
+    if (error) {
+      // Si el cupón se usó mientras tanto (otro puesto de caja), se saca del pedido para que no quede un descuento falso
+      if (cupon) {
+        const { data } = await supabase.rpc('consultar_cupon', { p_codigo: cupon.cupon_codigo });
+        if (data?.[0]?.cupon_estado !== 'activo') {
+          setCupon(null);
+          return setError('El cupón ya fue utilizado, así que se quitó del pedido. No se registró nada: revisá el total y volvé a registrar.');
+        }
+      }
+      return setError(error.message);
+    }
+    setAviso(
+      `Pedido registrado: ${destino} · ${formatPrecio(total)}.` +
+      (cupon ? ` Se aplicó el ${cupon.cupon_descuento}% del cupón ${formatCodigo(cupon.cupon_codigo)}, que ya no sirve más.` : '')
+    );
     setCarrito({});
     setMesaId('');
+    setCupon(null);
   }
 
   return (
@@ -131,10 +177,63 @@ export default function CajaClient({ productos, mesas }) {
               ))}
             </ul>
           )}
-          <p className="mt-3 flex justify-between border-t border-tinta/15 pt-3 font-semibold">
-            <span>Total</span>
-            <span className="tabular-nums">{formatPrecio(total)}</span>
-          </p>
+          <dl className="mt-3 space-y-1 border-t border-tinta/15 pt-3 text-sm">
+            {cupon && (
+              <>
+                <div className="flex justify-between">
+                  <dt className="text-tinta/70">Subtotal</dt>
+                  <dd className="tabular-nums">{formatPrecio(subtotal)}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-tinta/70">Descuento {cupon.cupon_descuento}%</dt>
+                  <dd className="tabular-nums">−{formatPrecio(descuento)}</dd>
+                </div>
+              </>
+            )}
+            <div className="flex justify-between text-base font-semibold">
+              <dt>Total</dt>
+              <dd className="tabular-nums">{formatPrecio(total)}</dd>
+            </div>
+          </dl>
+        </div>
+
+        {/* Cupón de descuento del cliente */}
+        <div>
+          <span className="label">Cupón de descuento</span>
+          {cupon ? (
+            <div className="flex items-start justify-between gap-3 rounded-md border border-tinta/15 bg-sifon p-3 text-sm">
+              <div>
+                <p className="font-semibold">{cupon.cupon_descuento}% · {cupon.cupon_nombre}</p>
+                <p className="text-xs text-tinta/70">
+                  <span className="font-mono tracking-wider">{formatCodigo(cupon.cupon_codigo)}</span>
+                  {cupon.cliente_nombre ? ` · ${cupon.cliente_nombre}` : ''}
+                </p>
+                <p className="mt-1 text-xs text-tinta/70">Se consume al registrar el pedido.</p>
+              </div>
+              <button type="button" onClick={quitarCupon} className="btn btn-ghost btn-sm shrink-0">Quitar</button>
+            </div>
+          ) : (
+            <form onSubmit={verificarCupon} className="flex gap-2">
+              <input
+                value={codigo}
+                onChange={(e) => {
+                  setCodigo(e.target.value.toUpperCase());
+                  setErrorCupon('');
+                }}
+                aria-label="Código del cupón"
+                className="input font-mono uppercase tracking-[0.2em]"
+                placeholder="K7M2-9QHX"
+                autoComplete="off"
+                autoCapitalize="characters"
+                spellCheck={false}
+                maxLength={12}
+              />
+              <button className="btn btn-ghost shrink-0" disabled={verificando || !codigo.trim()}>
+                {verificando ? 'Verificando…' : 'Aplicar'}
+              </button>
+            </form>
+          )}
+          {errorCupon && <p role="alert" className="mt-2 text-sm text-tomate">{errorCupon}</p>}
         </div>
 
         {error && <p role="alert" className="rounded-md bg-tomate/10 p-3 text-sm text-tomate">{error}</p>}

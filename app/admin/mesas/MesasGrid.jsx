@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { formatFecha, formatHora } from '@/lib/utils';
+import { IconBrandWhatsapp } from '@tabler/icons-react';
+import { formatFecha, formatHora, linkWhatsApp } from '@/lib/utils';
 import Badge from '@/components/admin/Badge';
 import PlanoAdmin from '@/components/admin/PlanoAdmin';
 
@@ -14,31 +15,6 @@ function horaFin(hora) {
   const [h, m] = hora.split(':').map(Number);
   const total = (h * 60 + m + 120) % (24 * 60);
   return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
-}
-
-// Arma el link de WhatsApp a partir del teléfono cargado por el cliente (formato libre, ej. "11 5555 0123").
-// Normaliza a formato internacional argentino para celulares: 54 9 + código de área + número (sin 0 ni 15).
-function linkWhatsApp(telefono) {
-  let d = String(telefono ?? '').replace(/\D/g, '');
-  if (d.startsWith('00')) d = d.slice(2);
-  if (!d) return null;
-  if (d.startsWith('54')) {
-    d = d.slice(2);
-    if (d.startsWith('9')) d = d.slice(1);
-  }
-  d = d.replace(/^0+/, '');
-  // Quita el "15" de celular que va después del código de área (código de 2 a 4 dígitos + 15 + abonado = 12 dígitos)
-  if (d.length === 12) {
-    for (const a of [2, 3, 4]) {
-      if (d.slice(a, a + 2) === '15') {
-        d = d.slice(0, a) + d.slice(a + 2);
-        break;
-      }
-    }
-  }
-  if (d.length === 10) d = `549${d}`;
-  else if (d.length < 10) return null;
-  return `https://wa.me/${d}`;
 }
 
 export default function MesasGrid({ mesas }) {
@@ -272,8 +248,9 @@ export default function MesasGrid({ mesas }) {
                               target="_blank"
                               rel="noopener noreferrer"
                               title="Contactar por WhatsApp"
-                              className="hover:underline"
+                              className="inline-flex items-center gap-1 align-bottom hover:underline"
                             >
+                              <IconBrandWhatsapp className="size-3.5 shrink-0" stroke={1.75} aria-hidden="true" />
                               {r.telefono_cliente}
                             </a>
                           </p>
