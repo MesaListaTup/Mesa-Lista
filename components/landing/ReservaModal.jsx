@@ -444,7 +444,11 @@ export default function ReservaModal() {
 
               {error && <p role="alert" className="rounded-md bg-tomate/10 p-3 text-sm text-tomate">{error}</p>}
 
+<<<<<<< HEAD
               <button type="submit" disabled={enviando} className="btn btn-dark w-full py-3 text-base">
+=======
+              <button type="submit" disabled={enviando} className="btn btn-primary w-full py-3 text-base">
+>>>>>>> 5c12805b45d06dbdb1ad7a33df1e309a185a3c8f
                 {enviando ? 'Reservando…' : 'Confirmar reserva'}
               </button>
             </form>

@@ -61,6 +61,16 @@ export default function PedidosClient({ productos, mesas, pedidos }) {
     router.refresh();
   }
 
+<<<<<<< HEAD
+=======
+  async function cancelar(p) {
+    if (!confirm('¿Cancelar este pedido? El registro quedará en el historial.')) return;
+    const { error } = await supabase.from('pedidos').update({ estado: 'cancelado' }).eq('id', p.id);
+    if (error) return setError(error.message);
+    router.refresh();
+  }
+
+>>>>>>> 5c12805b45d06dbdb1ad7a33df1e309a185a3c8f
   async function eliminar(p) {
     if (!confirm('¿Eliminar este pedido?')) return;
     const { error } = await supabase.from('pedidos').delete().eq('id', p.id);
@@ -149,10 +159,17 @@ export default function PedidosClient({ productos, mesas, pedidos }) {
         </button>
       </section>
 
+<<<<<<< HEAD
       {/* Pedidos de hoy */}
       <section className="space-y-3">
         <h2 className="font-semibold">Pedidos de hoy ({pedidos.length})</h2>
         {pedidos.length === 0 && <p className="panel text-sm text-tinta/60">Todavía no se registraron pedidos hoy.</p>}
+=======
+      {/* Histórico reciente */}
+      <section className="space-y-3">
+        <h2 className="font-semibold">Pedidos recientes ({pedidos.length})</h2>
+        {pedidos.length === 0 && <p className="panel text-sm text-tinta/60">Todavía no hay pedidos registrados.</p>}
+>>>>>>> 5c12805b45d06dbdb1ad7a33df1e309a185a3c8f
         {pedidos.map((p) => (
           <article key={p.id} className="panel">
             <div className="flex items-start justify-between gap-3">
@@ -173,7 +190,14 @@ export default function PedidosClient({ productos, mesas, pedidos }) {
                 {SIGUIENTE[p.estado] && (
                   <button onClick={() => avanzar(p)} className="btn btn-dark btn-sm">{ACCION[p.estado]}</button>
                 )}
+<<<<<<< HEAD
                 <button onClick={() => eliminar(p)} className="btn btn-ghost btn-sm text-tomate">Eliminar</button>
+=======
+                {['pendiente', 'preparando'].includes(p.estado) && (
+                  <button onClick={() => cancelar(p)} className="btn btn-ghost btn-sm text-tomate">Cancelar</button>
+                )}
+                <button onClick={() => eliminar(p)} className="btn btn-ghost btn-sm text-tinta/50">Eliminar</button>
+>>>>>>> 5c12805b45d06dbdb1ad7a33df1e309a185a3c8f
               </div>
             </div>
           </article>

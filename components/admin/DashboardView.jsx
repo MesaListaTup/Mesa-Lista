@@ -7,7 +7,10 @@ import {
   IconArrowRight,
   IconArrowUpRight,
   IconCalendarEvent,
+<<<<<<< HEAD
   IconCash,
+=======
+>>>>>>> 5c12805b45d06dbdb1ad7a33df1e309a185a3c8f
   IconClock,
   IconReceipt2,
   IconTable,
@@ -51,14 +54,23 @@ function Tarjeta({ titulo, href, icono, tono, resaltar, children, pie }) {
         className={`panel group relative block h-full overflow-hidden transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_28px_-14px_rgba(28,29,33,0.35)] active:scale-[0.985] ${resaltar ? 'border-limon bg-limon/20' : 'hover:border-tinta/25'
           }`}
       >
+<<<<<<< HEAD
         <div className="flex items-start justify-between">
           <span className={`flex size-10 items-center justify-center rounded-lg ${tono}`}>{icono}</span>
           {resaltar ? (
             <span className="relative mt-1 flex size-2.5" aria-hidden="true">
+=======
+        <div className="flex items-center gap-3">
+          <span className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${tono}`}>{icono}</span>
+          <p className="min-w-0 flex-1 text-sm font-medium leading-tight text-tinta/70">{titulo}</p>
+          {resaltar ? (
+            <span className="relative flex size-2.5 shrink-0" aria-hidden="true">
+>>>>>>> 5c12805b45d06dbdb1ad7a33df1e309a185a3c8f
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-tinta/40" />
               <span className="relative inline-flex size-2.5 rounded-full bg-tinta" />
             </span>
           ) : (
+<<<<<<< HEAD
             <IconArrowUpRight
               aria-hidden="true"
               className="size-4 text-tinta/30 opacity-0 transition duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100"
@@ -68,6 +80,12 @@ function Tarjeta({ titulo, href, icono, tono, resaltar, children, pie }) {
         </div>
         <p className="mt-4 text-sm text-tinta/70">{titulo}</p>
         <p className="mt-1 text-[1.65rem] font-bold leading-tight">{children}</p>
+=======
+            <IconArrowUpRight aria-hidden="true" className="size-4 shrink-0 text-tinta/30 opacity-0 transition duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100" stroke={2} />
+          )}
+        </div>
+        <p className="mt-2 text-[1.65rem] font-bold leading-tight">{children}</p>
+>>>>>>> 5c12805b45d06dbdb1ad7a33df1e309a185a3c8f
         {pie}
       </Link>
     </motion.div>
@@ -331,8 +349,13 @@ export default function DashboardView({ saludo, nombre, fechaHoy, stats, porDia,
             aria-hidden="true"
             className="gingham pointer-events-none absolute inset-0 opacity-[0.07] [mask-image:linear-gradient(to_left,black,transparent_75%)]"
           />
+<<<<<<< HEAD
           <div className="relative flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <div>
+=======
+          <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div className="min-w-0">
+>>>>>>> 5c12805b45d06dbdb1ad7a33df1e309a185a3c8f
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-papel/55 first-letter:uppercase">{fechaHoy}</p>
               <h1 className="mt-2 font-display text-3xl md:text-4xl">
                 {saludo}
@@ -342,8 +365,17 @@ export default function DashboardView({ saludo, nombre, fechaHoy, stats, porDia,
                 {resumen}
                 {aviso}
               </p>
+<<<<<<< HEAD
             </div>
             <div className="flex flex-wrap gap-3">
+=======
+              <div className="mt-5 border-t border-papel/15 pt-4 lg:mt-6">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-papel/55">Ventas de hoy</p>
+                <p className="mt-1 text-3xl font-bold leading-none tracking-tight text-papel sm:text-4xl"><Numero valor={stats.ventas} formato="precio" /></p>
+              </div>
+            </div>
+            <div className="flex shrink-0 flex-wrap gap-3">
+>>>>>>> 5c12805b45d06dbdb1ad7a33df1e309a185a3c8f
               <Link
                 href="/admin/reservas"
                 className="group inline-flex items-center gap-2 rounded-md bg-white px-4 py-2.5 text-sm font-semibold text-tinta transition duration-150 hover:bg-papel active:scale-[0.97]"
@@ -363,7 +395,11 @@ export default function DashboardView({ saludo, nombre, fechaHoy, stats, porDia,
         </motion.section>
 
         {/* Indicadores */}
+<<<<<<< HEAD
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+=======
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+>>>>>>> 5c12805b45d06dbdb1ad7a33df1e309a185a3c8f
           <Tarjeta titulo="Reservas de hoy" href="/admin/reservas" icono={<IconCalendarEvent className="size-5" stroke={1.75} />} tono="bg-tinta/[0.07] text-tinta">
             <Numero valor={stats.reservasHoy} />
           </Tarjeta>
@@ -400,6 +436,7 @@ export default function DashboardView({ saludo, nombre, fechaHoy, stats, porDia,
             <Numero valor={stats.mesasOcupadas} />
           </Tarjeta>
 
+<<<<<<< HEAD
           <Tarjeta titulo="Pedidos de hoy" href="/admin/cocina" icono={<IconReceipt2 className="size-5" stroke={1.75} />} tono="bg-tinta/[0.07] text-tinta">
             <Numero valor={stats.pedidos} />
           </Tarjeta>
@@ -407,6 +444,12 @@ export default function DashboardView({ saludo, nombre, fechaHoy, stats, porDia,
           <Tarjeta titulo="Ventas de hoy" href="/admin/caja" icono={<IconCash className="size-5" stroke={1.75} />} tono="bg-tinta/[0.07] text-tinta">
             <Numero valor={stats.ventas} formato="precio" />
           </Tarjeta>
+=======
+          <Tarjeta titulo="Pedidos de hoy" href="/admin/pedidos" icono={<IconReceipt2 className="size-5" stroke={1.75} />} tono="bg-tinta/[0.07] text-tinta">
+            <Numero valor={stats.pedidos} />
+          </Tarjeta>
+
+>>>>>>> 5c12805b45d06dbdb1ad7a33df1e309a185a3c8f
         </div>
 
         {/* Gráfico + mesas | agenda */}

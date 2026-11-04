@@ -1,5 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
+<<<<<<< HEAD
 import { inicioDiaAR } from '@/lib/utils';
+=======
+>>>>>>> 5c12805b45d06dbdb1ad7a33df1e309a185a3c8f
 import PedidosClient from './PedidosClient';
 
 export default async function PedidosPage() {
@@ -11,13 +14,22 @@ export default async function PedidosPage() {
     supabase
       .from('pedidos')
       .select('id,estado,tipo,total,created_at,mesas(numero_mesa),detalle_pedidos(cantidad,productos(nombre))')
+<<<<<<< HEAD
       .gte('created_at', inicioDiaAR())
       .order('created_at', { ascending: false }),
+=======
+      .order('created_at', { ascending: false })
+      .limit(100),
+>>>>>>> 5c12805b45d06dbdb1ad7a33df1e309a185a3c8f
   ]);
 
   return (
     <div className="space-y-6">
+<<<<<<< HEAD
       <h1 className="font-display text-4xl">Pedidos</h1>
+=======
+      <div><h1 className="font-display text-4xl">Pedidos</h1><p className="mt-1 text-sm text-tinta/60">Últimos 100 pedidos · histórico y actividad reciente</p></div>
+>>>>>>> 5c12805b45d06dbdb1ad7a33df1e309a185a3c8f
       <PedidosClient productos={productos ?? []} mesas={mesas ?? []} pedidos={pedidos ?? []} />
     </div>
   );

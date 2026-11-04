@@ -11,7 +11,10 @@ import AvatarUploader from '@/components/perfil/AvatarUploader';
 import { PUNTOS_POR_RESERVA } from '@/lib/puntos';
 import { puedeVerPanel } from '@/lib/roles';
 import { formatCodigo, fechaHoraAR } from '@/lib/cupones';
+<<<<<<< HEAD
 import { IconLogout } from '@tabler/icons-react';
+=======
+>>>>>>> 5c12805b45d06dbdb1ad7a33df1e309a185a3c8f
 
 export const metadata = { title: 'Mi perfil · Mesa Lista' };
 export const dynamic = 'force-dynamic';
@@ -97,10 +100,14 @@ export default async function PerfilPage() {
                     <Link href="/admin" className="border-b border-white/60 pb-0.5 hover:border-white">Ir al panel</Link>
                   )}
                   <form action="/auth/signout" method="post">
+<<<<<<< HEAD
                     <button className="inline-flex items-center gap-2 text-white/60 hover:text-white">
                       <IconLogout className="size-4" stroke={1.75} aria-hidden="true" />
                       Cerrar sesión
                     </button>
+=======
+                    <button className="text-white/60 hover:text-white">Cerrar sesión</button>
+>>>>>>> 5c12805b45d06dbdb1ad7a33df1e309a185a3c8f
                   </form>
                 </div>
               </Reveal>
