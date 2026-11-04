@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Sidebar from '@/components/admin/Sidebar';
-import { hoyAR } from '@/lib/utils';
+import { hoyAR, inicioDiaAR } from '@/lib/utils';
 import { puedeVerPanel } from '@/lib/roles';
 
 export const metadata = { title: 'Panel · Mesa Lista' };
@@ -32,15 +32,17 @@ export default async function AdminLayout({ children }) {
   }
 
   // Contadores para los avisos del menú lateral. Si una consulta falla, simplemente no se muestra el aviso.
-  const [reservasPend, mensajesNuevos] = await Promise.all([
+  const [reservasPend, mensajesNuevos, pedidosCocina] = await Promise.all([
     supabase
       .from('reservas')
       .select('id', { count: 'exact', head: true })
       .eq('estado', 'pendiente')
       .gte('fecha_reserva', hoyAR()),
     supabase.from('mensajes_contacto').select('id', { count: 'exact', head: true }).eq('leido', false),
+    // Pedidos de hoy que Cocina todavía no empezó a preparar
+    supabase.from('pedidos').select('id', { count: 'exact', head: true }).eq('estado', 'pendiente').gte('created_at', inicioDiaAR()),
   ]);
-  const contadores = { reservas: reservasPend.count ?? 0, mensajes: mensajesNuevos.count ?? 0 };
+  const contadores = { reservas: reservasPend.count ?? 0, mensajes: mensajesNuevos.count ?? 0, cocina: pedidosCocina.count ?? 0 };
 
   return (
     <div className="panel-theme min-h-screen bg-papel text-tinta md:flex">

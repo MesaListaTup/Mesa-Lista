@@ -6,12 +6,13 @@ import { usePathname } from 'next/navigation';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import {
   IconCalendarEvent,
+  IconCash,
+  IconChefHat,
   IconCode,
   IconLayoutDashboard,
   IconLogout,
   IconMenu2,
   IconMessage,
-  IconReceipt2,
   IconTable,
   IconTicket,
   IconToolsKitchen2,
@@ -40,7 +41,8 @@ const SECCIONES = [
       { href: '/admin', label: 'Resumen', icon: <IconLayoutDashboard className={ICON} stroke={1.75} /> },
       { href: '/admin/reservas', label: 'Reservas', icon: <IconCalendarEvent className={ICON} stroke={1.75} />, badge: 'reservas' },
       { href: '/admin/mesas', label: 'Mesas', icon: <IconTable className={ICON} stroke={1.75} /> },
-      { href: '/admin/pedidos', label: 'Pedidos', icon: <IconReceipt2 className={ICON} stroke={1.75} /> },
+      { href: '/admin/caja', label: 'Caja', icon: <IconCash className={ICON} stroke={1.75} /> },
+      { href: '/admin/cocina', label: 'Cocina', icon: <IconChefHat className={ICON} stroke={1.75} />, badge: 'cocina' },
     ],
   },
   {
@@ -215,7 +217,7 @@ export default function Sidebar({ perfil, contadores }) {
     };
   }, [abierto]);
 
-  const total = (contadores?.reservas ?? 0) + (contadores?.mensajes ?? 0);
+  const total = (contadores?.reservas ?? 0) + (contadores?.mensajes ?? 0) + (contadores?.cocina ?? 0);
 
   return (
     <>

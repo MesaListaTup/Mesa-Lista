@@ -400,11 +400,11 @@ export default function DashboardView({ saludo, nombre, fechaHoy, stats, porDia,
             <Numero valor={stats.mesasOcupadas} />
           </Tarjeta>
 
-          <Tarjeta titulo="Pedidos de hoy" href="/admin/pedidos" icono={<IconReceipt2 className="size-5" stroke={1.75} />} tono="bg-tinta/[0.07] text-tinta">
+          <Tarjeta titulo="Pedidos de hoy" href="/admin/cocina" icono={<IconReceipt2 className="size-5" stroke={1.75} />} tono="bg-tinta/[0.07] text-tinta">
             <Numero valor={stats.pedidos} />
           </Tarjeta>
 
-          <Tarjeta titulo="Ventas de hoy" href="/admin/pedidos" icono={<IconCash className="size-5" stroke={1.75} />} tono="bg-tinta/[0.07] text-tinta">
+          <Tarjeta titulo="Ventas de hoy" href="/admin/caja" icono={<IconCash className="size-5" stroke={1.75} />} tono="bg-tinta/[0.07] text-tinta">
             <Numero valor={stats.ventas} formato="precio" />
           </Tarjeta>
         </div>
