@@ -3,12 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-<<<<<<< HEAD
 import { IconBrandWhatsapp } from '@tabler/icons-react';
 import { formatFecha, formatHora, formatHoraTS, linkWhatsApp } from '@/lib/utils';
-=======
-import { formatFecha, formatHora, formatHoraTS } from '@/lib/utils';
->>>>>>> 5c12805b45d06dbdb1ad7a33df1e309a185a3c8f
 import Badge from '@/components/admin/Badge';
 
 // Día en que se hizo la reserva (hora de Argentina), ej. "3 nov"
@@ -82,7 +78,6 @@ export default function ReservasTable({ reservas, mesas }) {
                   </td>
                   <td className="px-4 py-3">
                     <p className="font-medium">{r.nombre_cliente}</p>
-<<<<<<< HEAD
                     <a
                       href={linkWhatsApp(r.telefono_cliente) ?? `tel:${r.telefono_cliente}`}
                       target="_blank"
@@ -93,9 +88,6 @@ export default function ReservasTable({ reservas, mesas }) {
                       <IconBrandWhatsapp className="size-3.5 shrink-0" stroke={1.75} aria-hidden="true" />
                       {r.telefono_cliente}
                     </a>
-=======
-                    <a href={`tel:${r.telefono_cliente}`} className="text-xs text-tinta/60 hover:underline">{r.telefono_cliente}</a>
->>>>>>> 5c12805b45d06dbdb1ad7a33df1e309a185a3c8f
                   </td>
                   <td className="px-4 py-3 tabular-nums">{r.cantidad_personas}</td>
                   <td className="px-4 py-3">
